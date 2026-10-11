@@ -1,3 +1,7 @@
-from typing import Literal
+from enum import StrEnum, auto
 
-DatasetSplit = Literal["train", "validation", "test"]
+
+class DatasetSplit(StrEnum):
+    TRAIN = auto()
+    VALIDATION = auto()
+    TEST = auto()

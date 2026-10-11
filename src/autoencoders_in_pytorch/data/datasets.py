@@ -116,14 +116,14 @@ class ImageDataset(VisionDataset, ABC):
 
 class MNISTDataset(ImageDataset):
     def __init__(self, split: DatasetSplit, transform: Callable | None = None) -> None:
-        if split not in ("train", "test"):
-            msg = f"Unsupported MNIST split: {split!r}. " "Expected 'train' or 'test'."
+        if split not in (DatasetSplit.TRAIN, DatasetSplit.TEST):
+            msg = f"Unsupported MNIST split: {split}. " "Expected 'train' or 'test'."
             logger.error(msg)
             raise ValueError(msg)
 
         super().__init__(transform=transform)
 
-        split_bool = split == "train"
+        split_bool = split == DatasetSplit.TRAIN
         dataset_dir = DATASETS_DIRPATH / "mnist"
         create_directory(dataset_dir, exist_ok=True)
         self.dataset: torchvision.datasets.MNIST = torchvision.datasets.MNIST(

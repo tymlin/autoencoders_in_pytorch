@@ -9,6 +9,8 @@ authors = [
 requires-python = ">=3.13"
 dependencies = [
     "loguru>=0.7.3",
+    "pyaml>=26.7.0",
+    "rich>=15.0.0",
 ]
 
 [build-system]

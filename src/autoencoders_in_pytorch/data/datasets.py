@@ -88,7 +88,7 @@ class ImageDataset(VisionDataset, ABC):
         for idx, ax in zip(indices, axes):
             if after_transforms:
                 image, target = self[idx]
-                image = image.detach().cpu().squeeze(0).numpy()
+                image = image.detach().cpu().permute(1, 2, 0).numpy()
                 vmax = 1.0
             else:
                 image, target = self.get_raw_sample(idx)
@@ -117,7 +117,7 @@ class ImageDataset(VisionDataset, ABC):
 class MNISTDataset(ImageDataset):
     def __init__(self, split: DatasetSplit, transform: Callable | None = None) -> None:
         if split not in (DatasetSplit.TRAIN, DatasetSplit.TEST):
-            msg = f"Unsupported MNIST split: {split}. " "Expected 'train' or 'test'."
+            msg = f"Unsupported dataset split: {split}. " "Expected 'train' or 'test'."
             logger.error(msg)
             raise ValueError(msg)
 
@@ -127,6 +127,80 @@ class MNISTDataset(ImageDataset):
         dataset_dir = DATASETS_DIRPATH / "mnist"
         create_directory(dataset_dir, exist_ok=True)
         self.dataset: torchvision.datasets.MNIST = torchvision.datasets.MNIST(
+            root=dataset_dir,
+            train=split_bool,
+            transform=None,
+            download=True,
+        )
+
+        self.name = f"{self.dataset.__class__.__name__}-{split}"
+        self.initialize_classes_dicts()
+
+        logger.info(f"Initialized `{self.name}` dataset")
+
+    def get_raw_image(self, index: int) -> np.ndarray:
+        return self.dataset.data[index].numpy()
+
+    def get_raw_target(self, index: int) -> int:
+        return self.dataset.targets[index].int().item()
+
+    def get_class_names(self) -> list[str]:
+        return self.dataset.classes
+
+    def get_dataset_len(self) -> int:
+        return len(self.dataset.targets)
+
+
+class CIFAR10Dataset(ImageDataset):
+    def __init__(self, split: DatasetSplit, transform: Callable | None = None) -> None:
+        if split not in (DatasetSplit.TRAIN, DatasetSplit.TEST):
+            msg = f"Unsupported dataset split: {split}. " "Expected 'train' or 'test'."
+            logger.error(msg)
+            raise ValueError(msg)
+
+        super().__init__(transform=transform)
+
+        split_bool = split == DatasetSplit.TRAIN
+        dataset_dir = DATASETS_DIRPATH / "cifar10"
+        create_directory(dataset_dir, exist_ok=True)
+        self.dataset: torchvision.datasets.CIFAR10 = torchvision.datasets.CIFAR10(
+            root=dataset_dir,
+            train=split_bool,
+            transform=None,
+            download=True,
+        )
+
+        self.name = f"{self.dataset.__class__.__name__}-{split}"
+        self.initialize_classes_dicts()
+
+        logger.info(f"Initialized `{self.name}` dataset")
+
+    def get_raw_image(self, index: int) -> np.ndarray:
+        return self.dataset.data[index]
+
+    def get_raw_target(self, index: int) -> int:
+        return self.dataset.targets[index]
+
+    def get_class_names(self) -> list[str]:
+        return self.dataset.classes
+
+    def get_dataset_len(self) -> int:
+        return len(self.dataset.targets)
+
+
+class FashionMNISTDataset(ImageDataset):
+    def __init__(self, split: DatasetSplit, transform: Callable | None = None) -> None:
+        if split not in (DatasetSplit.TRAIN, DatasetSplit.TEST):
+            msg = f"Unsupported dataset split: {split}. " "Expected 'train' or 'test'."
+            logger.error(msg)
+            raise ValueError(msg)
+
+        super().__init__(transform=transform)
+
+        split_bool = split == DatasetSplit.TRAIN
+        dataset_dir = DATASETS_DIRPATH / "fashion_mnist"
+        create_directory(dataset_dir, exist_ok=True)
+        self.dataset: torchvision.datasets.FashionMNIST = torchvision.datasets.FashionMNIST(
             root=dataset_dir,
             train=split_bool,
             transform=None,

@@ -23,5 +23,6 @@ if __name__ == "__main__":
     datamodule.setup_dataloaders()
     train_dataloader = datamodule.get_train_dataloader()
 
-    images, targets = next(iter(train_dataloader))
+    loader_iter = iter(train_dataloader)
+    images, targets = next(loader_iter)
     logger.info(f"Images shape: {images.shape}, targets shape: {targets.shape}")

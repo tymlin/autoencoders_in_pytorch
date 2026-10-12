@@ -5,7 +5,7 @@ from pathlib import Path
 
 from loguru import logger as _logger
 
-from autoencoders_in_pytorch.consts import LOGGER_FILENAME, LOGGER_FORMAT, LOGGER_LEVEL, RUNS_DIRPATH
+from autoencoders_in_pytorch.consts import LOGGER_FORMAT, LOGGER_LEVEL, RUNS_DIRPATH
 
 logger = _logger
 
@@ -13,7 +13,7 @@ logger = _logger
 def get_log_filepath(
     run_name: str | None = None,
     run_dirpath: str | Path | None = None,
-    log_filename: str | None = LOGGER_FILENAME,
+    log_filename: str | None = None,
 ) -> Path | None:
     """Resolve the logfile path for a run.
 
@@ -42,7 +42,7 @@ def get_log_filepath(
 def configure_logger(
     run_name: str | None = None,
     run_dirpath: str | Path | None = None,
-    log_filename: str | None = LOGGER_FILENAME,
+    log_filename: str | None = "logs.log",
     level: str = LOGGER_LEVEL,
     format_: str = LOGGER_FORMAT,
     add_console_sink: bool = True,

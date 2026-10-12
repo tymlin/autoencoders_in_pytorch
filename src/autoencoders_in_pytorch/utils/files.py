@@ -5,6 +5,7 @@ from typing import Any
 
 import yaml
 
+from autoencoders_in_pytorch.consts import ROOT
 from autoencoders_in_pytorch.loggers import logger
 
 
@@ -19,6 +20,14 @@ def create_directory(dirpath: str | Path, parents: bool = False, exist_ok: bool 
     dirpath = Path(dirpath)
     dirpath.mkdir(parents=parents, exist_ok=exist_ok)
     logger.info(f"Created directory at path: '{dirpath}'")
+
+
+def get_relpath(path: str | Path, rel_path: str | Path = ROOT) -> str:
+    """Return relative path"""
+    path = Path(path).resolve()
+    rel_path = Path(rel_path).resolve()
+    output_path = str(path.relative_to(rel_path, walk_up=True))
+    return output_path
 
 
 def load_json(filepath: str | Path) -> dict[str, Any]:

@@ -104,3 +104,17 @@ def create_progress(
         console=Console(force_terminal=True, force_interactive=True, width=console_width),
         refresh_per_second=10,
     )
+
+
+def progress_to_str(progress: Progress, width: int = 300) -> str:
+    console = Console(
+        width=width,
+        force_terminal=False,
+        color_system=None,
+    )
+
+    with console.capture() as capture:
+        console.print(progress.get_renderable())
+
+    progress_text = capture.get().rstrip("\n")
+    return progress_text

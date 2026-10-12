@@ -12,7 +12,6 @@ RESULTS_DIRPATH = ROOT / "results"
 NOW = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 LOGGER_LEVEL = "INFO"
-LOGGER_FILENAME: str | None = None
 LOGGER_FORMAT = (
     "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
     "<level>{level: <8}</level> | "

@@ -71,9 +71,9 @@ def normalize_progress_total(total: int | float | None) -> int | None:
 def create_progress(
     unit: str = "items",
     show_metrics: bool = True,
-    bar_width: int | None = 30,
+    bar_width: int | None = 50,
     no_wrap: bool = True,
-    console_width: int | None = None,
+    console_width: int | None = 300,
 ) -> Progress:
     """Create the standard terminal progress bar used by scripts."""
     bar_column = (

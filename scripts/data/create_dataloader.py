@@ -1,10 +1,6 @@
 from autoencoders_in_pytorch.data import DataModule, DatasetSplit, MNISTDataset
 from autoencoders_in_pytorch.loggers import logger
 
-SPLIT: DatasetSplit = DatasetSplit.TRAIN
-SHOW_PLOT: bool = True
-NUM_IMAGES: int = 10
-
 if __name__ == "__main__":
     train_ds = MNISTDataset(split=DatasetSplit.TRAIN)
     test_ds = MNISTDataset(split=DatasetSplit.TEST)

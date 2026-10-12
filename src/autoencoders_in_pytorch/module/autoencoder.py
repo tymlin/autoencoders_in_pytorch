@@ -129,6 +129,13 @@ class AutoencoderModule:
         )
         return step_out
 
+    @torch.no_grad()
+    def compute_metrics(self, out: ModuleStepOut) -> dict[str, float]:
+        metrics = {
+            "loss": out.loss.item(),
+        }
+        return metrics
+
     def state_dict(self) -> dict[str, Any]:
         model_state = self.model.state_dict()
         optimizer_state = self.optimizer.state_dict()

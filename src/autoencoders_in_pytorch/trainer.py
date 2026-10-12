@@ -1,13 +1,15 @@
 from pathlib import Path
+from typing import Any
 
 import torch
 
 from autoencoders_in_pytorch.consts import NOW, RUNS_DIRPATH
 from autoencoders_in_pytorch.data import DataModule
 from autoencoders_in_pytorch.loggers import configure_logger, log_breaking_point, logger
-from autoencoders_in_pytorch.models import Device
+from autoencoders_in_pytorch.metrics import MetricsContainer
+from autoencoders_in_pytorch.models import Device, ModelStage
 from autoencoders_in_pytorch.module import AutoencoderModule
-from autoencoders_in_pytorch.utils.files import create_directory, get_relpath
+from autoencoders_in_pytorch.utils.files import create_directory, get_relpath, save_json
 from autoencoders_in_pytorch.utils.progress import create_progress, progress_to_str
 from autoencoders_in_pytorch.utils.torch_utils import get_device_and_id
 
@@ -33,12 +35,19 @@ class Trainer:
         create_directory(self.run_dirpath, parents=True, exist_ok=True)
         configure_logger(run_dirpath=self.run_dirpath)
 
+        self.metrics: dict[ModelStage, MetricsContainer] = {
+            ModelStage.TRAIN: MetricsContainer(),
+            ModelStage.VALIDATION: MetricsContainer(),
+        }
+
         self.device, self.device_id = get_device_and_id(device, device_id)
         self.current_epoch = 0
         self.current_step = 0
+
         ckpt_dirpath = Path(self.run_dirpath) / "checkpoints"
         create_directory(ckpt_dirpath, parents=True, exist_ok=True)
         self.ckpt_filepath = ckpt_dirpath / "last.pth"
+        self.metrics_filepath = self.run_dirpath / "metrics.json"
 
         self.num_char = 150
 
@@ -69,14 +78,16 @@ class Trainer:
             self.current_epoch = epoch
             log_breaking_point(
                 logger,
-                f" Starting epoch {self.current_epoch + 1}/{self.max_epochs} ",
+                f"Starting epoch {self.current_epoch + 1}/{self.max_epochs} ",
                 num_chars=self.num_char,
                 fill_char="=",
             )
             self.training_epoch(train_dataloader)
             self.validation_epoch(validation_dataloader)
 
-        self.save_checkpoint()
+            self.log_epoch_summary()
+            self.save_metrics()
+            self.save_checkpoint()
 
     def training_epoch(self, dataloader: torch.utils.data.DataLoader):
         num_batches = len(dataloader)
@@ -86,13 +97,15 @@ class Trainer:
                 total=num_batches,
                 metrics={},
             )
-            for _batch_ix, batch in enumerate(dataloader):
+            for batch_idx, batch in enumerate(dataloader):
                 out = self.module.training_step(batch)
                 self.current_step += 1
-                out = out.to_numpy()
-                progress_metrics = {
-                    "loss": f"{out.loss.item():.6f}",
-                }
+
+                metrics = self.module.compute_metrics(out)
+                self.add_metrics(
+                    ModelStage.TRAIN, epoch=self.current_epoch, step=batch_idx, num_samples=len(out), metrics=metrics
+                )
+                progress_metrics = {name: f"{value:.4f}" for name, value in metrics.items()}
                 progress.update(
                     task_id,
                     advance=1,
@@ -109,12 +122,19 @@ class Trainer:
                 total=num_batches,
                 metrics={},
             )
-            for _batch_ix, batch in enumerate(dataloader):
+            for batch_idx, batch in enumerate(dataloader):
                 out = self.module.validation_step(batch)
-                out = out.to_numpy()
-                progress_metrics = {
-                    "loss": f"{out.loss.item():.6f}",
-                }
+
+                metrics = self.module.compute_metrics(out)
+                self.add_metrics(
+                    ModelStage.VALIDATION,
+                    epoch=self.current_epoch,
+                    step=batch_idx,
+                    num_samples=len(out),
+                    metrics=metrics,
+                )
+
+                progress_metrics = {name: f"{value:.4f}" for name, value in metrics.items()}
                 progress.update(
                     task_id,
                     advance=1,
@@ -122,6 +142,38 @@ class Trainer:
                 )
             final_progress_bar_text = f"Final progress: \n{progress_to_str(progress)}"
         logger.info(final_progress_bar_text)
+
+    def add_metrics(
+        self, stage: ModelStage, epoch: int, step: int, num_samples: int, metrics: dict[str, float]
+    ) -> None:
+        self.metrics[stage].add(
+            epoch=epoch,
+            step=step,
+            num_samples=num_samples,
+            metrics=metrics,
+        )
+
+    def get_all_metrics(self) -> dict[str, list[dict[str, Any]]]:
+        metrics = {stage.value: container.to_records() for stage, container in self.metrics.items()}
+        return metrics
+
+    def log_epoch_summary(self) -> None:
+        log_breaking_point(
+            logger, f"Finished epoch {self.current_epoch + 1}/{self.max_epochs}", num_chars=self.num_char, fill_char="="
+        )
+
+        msg = "Metrics: "
+        for stage, container in self.metrics.items():
+            msg += f"\n\t{stage.value}:"
+            metrics = container.mean(epoch=self.current_epoch)
+            for name, value in metrics.items():
+                msg += f"\n\t\t{name}: {value:.8f}"
+
+        logger.info(msg)
+
+    def save_metrics(self) -> None:
+        metrics = self.get_all_metrics()
+        save_json(filepath=self.metrics_filepath, data=metrics)
 
     def save_checkpoint(self):
         self.module.model.eval()
@@ -132,11 +184,13 @@ class Trainer:
         )
         module_state = self.module.state_dict()
         datamodule_state = self.datamodule.state_dict()
+        metrics = self.get_all_metrics()
 
         ckpt_state = {
             "module": module_state,
             "datamodule": datamodule_state,
             "epoch": epoch,
             "step": step,
+            "metrics": metrics,
         }
         torch.save(ckpt_state, self.ckpt_filepath)

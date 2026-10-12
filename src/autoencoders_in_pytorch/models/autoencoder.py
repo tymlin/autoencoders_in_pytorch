@@ -1,5 +1,4 @@
 from abc import ABC
-from ast import List
 
 import torch
 from torch import Tensor, nn
@@ -34,10 +33,10 @@ class BaseAutoencoder(nn.Module, ABC):
     def dtype(self) -> torch.dtype:
         return next(self.parameters()).dtype
 
-    def forward(self, inputs: Tensor) -> Tensor:
+    def forward(self, inputs: Tensor) -> tuple[Tensor, Tensor]:
         latents = self.encode(inputs)
         outputs = self.decode(latents)
-        return outputs
+        return outputs, latents
 
 
 class MLPAutoencoder(BaseAutoencoder):

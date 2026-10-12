@@ -25,6 +25,7 @@ class MLPDecoder(nn.Module):
             current_dim = hidden_dim
 
         self.layers["output"] = nn.Linear(current_dim, self.output_dim)
+        self.layers["sigmoid"] = nn.Sigmoid()
         self.layers["unflatten"] = nn.Unflatten(
             dim=1,
             unflattened_size=self.output_shape,

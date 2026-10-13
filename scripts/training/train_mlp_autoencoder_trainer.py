@@ -3,7 +3,7 @@ from torch import nn
 
 from autoencoders_in_pytorch.config import DataConfig, RunConfig, TrainerConfig
 from autoencoders_in_pytorch.consts import NOW
-from autoencoders_in_pytorch.data import DATASET_CLASSES, DataModule, DatasetSplit, build_transform
+from autoencoders_in_pytorch.data import DATASET_CLASSES, DataModule, DatasetSplit, DatasetType, build_transform
 from autoencoders_in_pytorch.loggers import configure_logger, logger
 from autoencoders_in_pytorch.models import Device, MLPAutoencoder
 from autoencoders_in_pytorch.module import AutoencoderModule
@@ -18,6 +18,7 @@ EPOCHS: int = 10
 if __name__ == "__main__":
     config = RunConfig(
         data=DataConfig(
+            dataset=DatasetType.MNIST,
             batch_size=BATCH_SIZE,
             val_split=DatasetSplit.TEST,  # we use test set as validation
         ),
@@ -66,9 +67,9 @@ if __name__ == "__main__":
     image_shape: tuple[int, int, int] = (channels, height, width)
     model = MLPAutoencoder(
         encoder_input_shape=image_shape,
-        encoder_hidden_dims=[128],
-        latent_dim=32,
-        decoder_hidden_dims=[128],
+        encoder_hidden_dims=[128, 64],
+        latent_dim=2,
+        decoder_hidden_dims=[64, 128],
         decoder_output_shape=image_shape,
     )
     optimizer = torch.optim.Adam(model.parameters(), lr=config.optimizer.lr, weight_decay=config.optimizer.weight_decay)

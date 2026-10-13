@@ -11,7 +11,7 @@ from torch import Tensor
 from torchvision.datasets import VisionDataset
 
 from autoencoders_in_pytorch.consts import DATASETS_DIRPATH
-from autoencoders_in_pytorch.data.types import DatasetSplit
+from autoencoders_in_pytorch.data.types import DatasetSplit, DatasetType
 from autoencoders_in_pytorch.loggers import logger
 from autoencoders_in_pytorch.utils.files import create_directory
 
@@ -223,3 +223,10 @@ class FashionMNISTDataset(ImageDataset):
 
     def get_dataset_len(self) -> int:
         return len(self.dataset.targets)
+
+
+DATASET_CLASSES = {
+    DatasetType.MNIST: MNISTDataset,
+    DatasetType.FashionMNIST: FashionMNISTDataset,
+    DatasetType.CIFAR10: CIFAR10Dataset,
+}

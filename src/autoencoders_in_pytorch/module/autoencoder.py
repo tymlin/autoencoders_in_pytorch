@@ -87,7 +87,7 @@ class AutoencoderModule:
     ) -> None:
         self.device = device
 
-        logger.info(f"Moving model and loss to device `{self.device}`")
+        logger.info(f"Moving model and loss to the device: `{self.device}`")
         self.model.to(self.device)
         self.loss_fn.to(self.device)
 

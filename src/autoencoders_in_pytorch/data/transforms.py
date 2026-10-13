@@ -2,10 +2,7 @@ import torch
 from torchvision.transforms import v2
 
 
-def build_transform(
-    *,
-    image_size: tuple[int, int] | None = None,
-) -> v2.Compose:
+def build_transform(image_size: tuple[int, int] | None = None) -> v2.Compose:
     steps: list[v2.Transform] = [v2.ToImage()]
 
     if image_size is not None:

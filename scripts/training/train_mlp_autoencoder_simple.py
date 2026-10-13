@@ -2,7 +2,6 @@ import torch
 from torch import nn
 
 from autoencoders_in_pytorch.data import DataModule, DatasetSplit, MNISTDataset
-from autoencoders_in_pytorch.loggers import logger
 from autoencoders_in_pytorch.models import Device, MLPAutoencoder
 from autoencoders_in_pytorch.module import AutoencoderModule
 from autoencoders_in_pytorch.utils.progress import create_progress

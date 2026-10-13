@@ -10,7 +10,7 @@ from autoencoders_in_pytorch.loggers import logger
 
 
 def create_directory(dirpath: str | Path, parents: bool = False, exist_ok: bool = False) -> None:
-    """Create a directory at a specified path.
+    """Create a directory and log only when it is created.
 
     :param dirpath: Directory path.
     :param parents: Whether directory parents should be created.
@@ -18,8 +18,15 @@ def create_directory(dirpath: str | Path, parents: bool = False, exist_ok: bool 
     :return:
     """
     dirpath = Path(dirpath)
-    dirpath.mkdir(parents=parents, exist_ok=exist_ok)
-    logger.info(f"Created directory at path: '{dirpath}'")
+    try:
+        dirpath.mkdir(parents=parents)
+    except FileExistsError as exc:
+        if not exist_ok or not dirpath.is_dir():
+            msg = f"Could not create directory at path: '{dirpath}'. The path already exists."
+            logger.error(msg)
+            raise FileExistsError(msg) from exc
+    else:
+        logger.info(f"Created directory at path: '{dirpath}'")
 
 
 def get_relpath(path: str | Path, rel_path: str | Path = ROOT) -> str:

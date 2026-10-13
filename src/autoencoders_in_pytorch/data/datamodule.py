@@ -47,13 +47,15 @@ class DataModule:
             DatasetSplit.TEST: collate_fn_test,
         }
 
+        self.setup_dataloaders()
+        # log info at the end of the init
         self._log_info()
 
     def setup_dataloaders(self) -> None:
-        self.train_dataloader = self._dataloader(DatasetSplit.TRAIN)
-        self.val_dataloader = self._dataloader(DatasetSplit.VALIDATION)
+        self.train_dataloader = self._build_dataloader(DatasetSplit.TRAIN)
+        self.val_dataloader = self._build_dataloader(DatasetSplit.VALIDATION)
         if self.test_ds is not None:
-            self.test_dataloader = self._dataloader(DatasetSplit.TEST)
+            self.test_dataloader = self._build_dataloader(DatasetSplit.TEST)
 
     def get_dataset(self, split: DatasetSplit) -> ImageDataset | None:
         if split == DatasetSplit.TRAIN:
@@ -63,7 +65,21 @@ class DataModule:
         elif split == DatasetSplit.TEST:
             return self.test_ds
         else:
-            msg = "Dataset split must be either 'train', 'validation' or 'test'"
+            allowed_splits = " or ".join(f"'{split.value}'" for split in DatasetSplit)
+            msg = f"Dataset split must be either {allowed_splits}"
+            logger.error(msg)
+            raise ValueError(msg)
+
+    def get_dataloader(self, split: DatasetSplit) -> torch.utils.data.DataLoader | None:
+        if split == DatasetSplit.TRAIN:
+            return self.train_dataloader
+        elif split == DatasetSplit.VALIDATION:
+            return self.val_dataloader
+        elif split == DatasetSplit.TEST:
+            return self.test_dataloader
+        else:
+            allowed_splits = " or ".join(f"'{split.value}'" for split in DatasetSplit)
+            msg = f"Dataset split must be either {allowed_splits}"
             logger.error(msg)
             raise ValueError(msg)
 
@@ -94,7 +110,7 @@ class DataModule:
 
         return self.test_dataloader
 
-    def _dataloader(self, split: DatasetSplit) -> torch.utils.data.DataLoader:
+    def _build_dataloader(self, split: DatasetSplit) -> torch.utils.data.DataLoader:
         shuffle = split == DatasetSplit.TRAIN and self.shuffle  # shuffle only for train
         drop_last = self.drop_last if split == DatasetSplit.TRAIN else False  # don't drop last for val/test
 
@@ -120,15 +136,21 @@ class DataModule:
         return dataloader
 
     def _log_info(self) -> None:
-        datamodule_info = []
-        datasets = {"train": self.train_ds, "val": self.val_ds, "test": self.test_ds}
-        for split, ds in datasets.items():
+        msg = "Datasets summary: "
+        for split in DatasetSplit:
+            ds = self.get_dataset(split)
             ds_name = "None" if ds is None else ds.name
             num_samples = 0 if ds is None else len(ds)
-            ds_info = f"{split.rjust(6)}: {num_samples} ({ds_name})"
-            datamodule_info.append(ds_info)
-        datamodule_info = "\n".join(datamodule_info)
-        logger.info(f"DataModule stats: \n{datamodule_info}")
+            ds_info = f"{num_samples} ({ds_name})"
+            msg += f"\n\t{split.rjust(10)}: {ds_info}"
+        logger.info(msg)
+
+        msg = "Dataloader batches summary:"
+        for split in DatasetSplit:
+            dl = self.get_dataloader(split)
+            dl_info = "None" if dl is None else f"{len(dl)} batches"
+            msg += f"\n\t{split.value.rjust(10)}: {dl_info}"
+        logger.info(msg)
 
     def state_dict(self) -> dict:
         state = {

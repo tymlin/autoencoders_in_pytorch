@@ -1,13 +1,13 @@
 import random
+import textwrap
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import torch
 
-from autoencoders_in_pytorch.consts import NOW, RUNS_DIRPATH
 from autoencoders_in_pytorch.data import DataModule
-from autoencoders_in_pytorch.loggers import configure_logger, log_breaking_point, logger
+from autoencoders_in_pytorch.loggers import log_breaking_point, logger
 from autoencoders_in_pytorch.metrics import MetricsContainer
 from autoencoders_in_pytorch.models import Device, ModelStage
 from autoencoders_in_pytorch.module import AutoencoderModule
@@ -23,21 +23,18 @@ class Trainer:
         module: AutoencoderModule,
         datamodule: DataModule,
         max_epochs: int,
+        run_dirpath: str | Path,
         device: Device,
         device_id: int = 0,
-        run_dirpath: str | Path = RUNS_DIRPATH,
-        run_name: str | None = None,
+        num_visu_samples: int = 36,
+        num_visu_latents: int | None = None,
     ) -> None:
         self.module = module
         self.datamodule = datamodule
-        self.run_dirpath = run_dirpath
+        self.run_dirpath = Path(run_dirpath)
         self.max_epochs = max_epochs
-
-        # first configure the logger with run dirpath and file handler
-        run_name_postfix = f"_{run_name}" if run_name else ""
-        self.run_dirpath = Path(run_dirpath) / f"{NOW}{run_name_postfix}"
-        create_directory(self.run_dirpath, parents=True, exist_ok=True)
-        configure_logger(run_dirpath=self.run_dirpath)
+        self.num_visu_samples = num_visu_samples
+        self.num_visu_latents = num_visu_latents
 
         self.metrics: dict[ModelStage, MetricsContainer] = {
             ModelStage.TRAIN: MetricsContainer(),
@@ -58,13 +55,16 @@ class Trainer:
         self.visu_sample_indices = sorted(
             random.sample(
                 range(len(self.datamodule.val_ds)),
-                k=min(36, len(self.datamodule.val_ds)),
+                k=min(self.num_visu_samples, len(self.datamodule.val_ds)),
             )
         )
         self.visu_latent_indices = sorted(
             random.sample(
                 range(len(self.datamodule.val_ds)),
-                k=min(len(self.datamodule.val_ds), len(self.datamodule.val_ds)),  # plot all latents
+                k=min(
+                    self.num_visu_latents if self.num_visu_latents is not None else len(self.datamodule.val_ds),
+                    len(self.datamodule.val_ds),
+                ),
             )
         )
         self.visu_batch = None
@@ -72,8 +72,8 @@ class Trainer:
         self.num_char = 150
 
     def fit(self):
-        self.datamodule.setup_dataloaders()
         self.module.setup(device=self.device)
+        self.log_module_summary()
 
         train_dataloader = self.datamodule.get_train_dataloader()
         validation_dataloader = self.datamodule.get_val_dataloader()
@@ -82,15 +82,6 @@ class Trainer:
         self.visu_batch = validation_dataloader.collate_fn(
             [self.datamodule.val_ds[index] for index in self.visu_sample_indices]
         )
-
-        num_train_batches = len(train_dataloader)
-        num_val_batches = len(validation_dataloader)
-        logger.info(
-            "Dataloader batches:\n"
-            f"\tTrain: {num_train_batches} batches\n"
-            f"\tValidation  : {num_val_batches}  batches"
-        )
-        self.log_module_summary()
 
         log_breaking_point(
             logger,
@@ -137,7 +128,7 @@ class Trainer:
                     advance=1,
                     metrics=progress_metrics,
                 )
-            final_progress_bar_text = f"Final progress: \n{progress_to_str(progress)}"
+            final_progress_bar_text = f"Final progress: {progress_to_str(progress)}"
         logger.info(final_progress_bar_text)
 
     def validation_epoch(self, dataloader: torch.utils.data.DataLoader):
@@ -171,7 +162,7 @@ class Trainer:
                     advance=1,
                     metrics=progress_metrics,
                 )
-            final_progress_bar_text = f"Final progress: \n{progress_to_str(progress)}"
+            final_progress_bar_text = f"Final progress: {progress_to_str(progress)}"
         logger.info(final_progress_bar_text)
 
         out = self.module.validation_step(self.visu_batch).to_numpy()
@@ -223,7 +214,8 @@ class Trainer:
 
         msg = f"`{self.module.name}` summary: \n"
         for name, info in module_info_dict.items():
-            msg += f"\t{name}: \n\t\t{info}\n"
+            info = textwrap.indent(info, "\t\t")
+            msg += f"\t{name}: \n{info}\n"
         logger.info(msg)
 
     def log_epoch_summary(self) -> None:
@@ -231,7 +223,7 @@ class Trainer:
             logger, f"Finished epoch {self.current_epoch + 1}/{self.max_epochs}", num_chars=self.num_char, fill_char="="
         )
 
-        msg = "Metrics: "
+        msg = f"Epoch {self.current_epoch + 1} metrics summary: "
         for stage, container in self.metrics.items():
             msg += f"\n\t{stage.value}:"
             metrics = container.mean(epoch=self.current_epoch)

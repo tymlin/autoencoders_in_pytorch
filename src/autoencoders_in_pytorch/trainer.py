@@ -1,6 +1,8 @@
+import random
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import torch
 
 from autoencoders_in_pytorch.consts import NOW, RUNS_DIRPATH
@@ -12,6 +14,7 @@ from autoencoders_in_pytorch.module import AutoencoderModule
 from autoencoders_in_pytorch.utils.files import create_directory, get_relpath, save_json
 from autoencoders_in_pytorch.utils.progress import create_progress, progress_to_str
 from autoencoders_in_pytorch.utils.torch_utils import get_device_and_id
+from autoencoders_in_pytorch.visualization import plot_images, plot_latents
 
 
 class Trainer:
@@ -30,6 +33,7 @@ class Trainer:
         self.run_dirpath = run_dirpath
         self.max_epochs = max_epochs
 
+        # first configure the logger with run dirpath and file handler
         run_name_postfix = f"_{run_name}" if run_name else ""
         self.run_dirpath = Path(run_dirpath) / f"{NOW}{run_name_postfix}"
         create_directory(self.run_dirpath, parents=True, exist_ok=True)
@@ -48,6 +52,22 @@ class Trainer:
         create_directory(ckpt_dirpath, parents=True, exist_ok=True)
         self.ckpt_filepath = ckpt_dirpath / "last.pth"
         self.metrics_filepath = self.run_dirpath / "metrics.json"
+        self.plots_dirpath = Path(self.run_dirpath) / "plots"
+        create_directory(self.plots_dirpath, parents=True, exist_ok=True)
+
+        self.visu_sample_indices = sorted(
+            random.sample(
+                range(len(self.datamodule.val_ds)),
+                k=min(36, len(self.datamodule.val_ds)),
+            )
+        )
+        self.visu_latent_indices = sorted(
+            random.sample(
+                range(len(self.datamodule.val_ds)),
+                k=min(len(self.datamodule.val_ds), len(self.datamodule.val_ds)),  # plot all latents
+            )
+        )
+        self.visu_batch = None
 
         self.num_char = 150
 
@@ -58,6 +78,11 @@ class Trainer:
         train_dataloader = self.datamodule.get_train_dataloader()
         validation_dataloader = self.datamodule.get_val_dataloader()
 
+        # get specific batches for visualization with dataloader collate function
+        self.visu_batch = validation_dataloader.collate_fn(
+            [self.datamodule.val_ds[index] for index in self.visu_sample_indices]
+        )
+
         num_train_batches = len(train_dataloader)
         num_val_batches = len(validation_dataloader)
         logger.info(
@@ -65,6 +90,7 @@ class Trainer:
             f"\tTrain: {num_train_batches} batches\n"
             f"\tValidation  : {num_val_batches}  batches"
         )
+        self.log_module_summary()
 
         log_breaking_point(
             logger,
@@ -122,8 +148,13 @@ class Trainer:
                 total=num_batches,
                 metrics={},
             )
+            latent_batches = []
+            label_batches = []
             for batch_idx, batch in enumerate(dataloader):
                 out = self.module.validation_step(batch)
+                out_numpy = out.to_numpy()
+                latent_batches.append(out_numpy.latents)
+                label_batches.append(out_numpy.labels)
 
                 metrics = self.module.compute_metrics(out)
                 self.add_metrics(
@@ -143,6 +174,28 @@ class Trainer:
             final_progress_bar_text = f"Final progress: \n{progress_to_str(progress)}"
         logger.info(final_progress_bar_text)
 
+        out = self.module.validation_step(self.visu_batch).to_numpy()
+        epoch = self.current_epoch + 1
+        plot_images(
+            images=out.inputs,
+            sample_indices=self.visu_sample_indices,
+            title=f"Epoch {epoch:03d} - inputs",
+            save_filepath=(self.plots_dirpath / "inputs" / f"epoch_{epoch:03d}.png"),
+        )
+        plot_images(
+            images=out.outputs,
+            sample_indices=self.visu_sample_indices,
+            title=f"Epoch {epoch:03d} - reconstructions",
+            save_filepath=(self.plots_dirpath / "reconstructions" / f"epoch_{epoch:03d}.png"),
+        )
+        plot_latents(
+            latents=np.concatenate(latent_batches)[self.visu_latent_indices],
+            labels=np.concatenate(label_batches)[self.visu_latent_indices],
+            class_names=self.datamodule.val_ds.classes_int2str,
+            title=f"Epoch {epoch} - latent space",
+            save_filepath=(self.plots_dirpath / "latents" / f"latents_epoch_{epoch:03d}.png"),
+        )
+
     def add_metrics(
         self, stage: ModelStage, epoch: int, step: int, num_samples: int, metrics: dict[str, float]
     ) -> None:
@@ -156,6 +209,22 @@ class Trainer:
     def get_all_metrics(self) -> dict[str, list[dict[str, Any]]]:
         metrics = {stage.value: container.to_records() for stage, container in self.metrics.items()}
         return metrics
+
+    def log_module_summary(self):
+        model_structure = str(self.module.model)
+        optim_info = str(self.module.optimizer)
+        loss_fn_info = str(self.module.loss_fn)
+
+        module_info_dict = {
+            "Model": model_structure,
+            "Optimizer": optim_info,
+            "Loss function": loss_fn_info,
+        }
+
+        msg = f"`{self.module.name}` summary: \n"
+        for name, info in module_info_dict.items():
+            msg += f"\t{name}: \n\t\t{info}\n"
+        logger.info(msg)
 
     def log_epoch_summary(self) -> None:
         log_breaking_point(

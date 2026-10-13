@@ -5,12 +5,15 @@ from autoencoders_in_pytorch.data import DataModule, DatasetSplit, MNISTDataset
 from autoencoders_in_pytorch.models import Device, MLPAutoencoder
 from autoencoders_in_pytorch.module import AutoencoderModule
 from autoencoders_in_pytorch.trainer import Trainer
+from autoencoders_in_pytorch.utils.torch_utils import seed_everything
 
 DEVICE: Device = Device.CPU
 BATCH_SIZE: int = 64
 EPOCHS: int = 10
+SEED: int = 42
 
 if __name__ == "__main__":
+    seed_everything(SEED)
     train_ds = MNISTDataset(split=DatasetSplit.TRAIN)
     test_ds = MNISTDataset(split=DatasetSplit.TEST)
     datamodule = DataModule(
@@ -22,6 +25,7 @@ if __name__ == "__main__":
         pin_memory=True,
         drop_last=True,
         shuffle=True,
+        seed=SEED,
     )
 
     model = MLPAutoencoder(

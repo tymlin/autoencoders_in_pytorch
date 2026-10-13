@@ -3,8 +3,8 @@ from abc import ABC
 import torch
 from torch import Tensor, nn
 
-from autoencoders_in_pytorch.models.decoders import MLPDecoder
-from autoencoders_in_pytorch.models.encoders import MLPEncoder
+from autoencoders_in_pytorch.models.decoders import CNNDecoder, MLPDecoder
+from autoencoders_in_pytorch.models.encoders import CNNEncoder, MLPEncoder
 
 
 class BaseAutoencoder(nn.Module, ABC):
@@ -63,5 +63,32 @@ class MLPAutoencoder(BaseAutoencoder):
         self.decoder = MLPDecoder(
             latent_dim=latent_dim,
             hidden_dims=decoder_hidden_dims,
+            output_shape=decoder_output_shape,
+        )
+
+
+class CNNAutoencoder(BaseAutoencoder):
+    def __init__(
+        self,
+        encoder_input_shape: tuple[int, int, int] = (1, 28, 28),
+        encoder_hidden_channels: list[int] | None = None,
+        latent_channels: int = 32,
+        decoder_hidden_channels: list[int] | None = None,
+        decoder_output_shape: tuple[int, int, int] = (1, 28, 28),
+    ):
+        super().__init__()
+        if encoder_hidden_channels is None:
+            encoder_hidden_channels = []
+        if decoder_hidden_channels is None:
+            decoder_hidden_channels = []
+
+        self.encoder = CNNEncoder(
+            input_shape=encoder_input_shape,
+            hidden_channels=encoder_hidden_channels,
+            latent_channels=latent_channels,
+        )
+        self.decoder = CNNDecoder(
+            latent_channels=latent_channels,
+            hidden_channels=decoder_hidden_channels,
             output_shape=decoder_output_shape,
         )

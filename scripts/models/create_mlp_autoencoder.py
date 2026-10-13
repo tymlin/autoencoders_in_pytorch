@@ -6,9 +6,9 @@ from autoencoders_in_pytorch.models import MLPAutoencoder
 if __name__ == "__main__":
     model = MLPAutoencoder(
         encoder_input_shape=(1, 28, 28),
-        encoder_hidden_dims=[128],
+        encoder_hidden_dims=[128, 64],
         latent_dim=32,
-        decoder_hidden_dims=[128],
+        decoder_hidden_dims=[64, 128],
         decoder_output_shape=(1, 28, 28),
     )
     x = torch.rand(2, 1, 28, 28)

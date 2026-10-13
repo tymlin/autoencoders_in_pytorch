@@ -1,6 +1,7 @@
 import math
 
 from torch import Tensor, nn
+from torchvision.ops import Conv2dNormActivation
 
 
 class MLPEncoder(nn.Module):
@@ -12,9 +13,10 @@ class MLPEncoder(nn.Module):
     ) -> None:
         super().__init__()
         self.input_shape = input_shape
-        self.input_dim = math.prod(input_shape)
         self.hidden_dims = hidden_dims
         self.latent_dim = latent_dim
+
+        self.input_dim = math.prod(input_shape)
 
         self.layers = nn.ModuleDict()
         self.layers["flatten"] = nn.Flatten(start_dim=1)
@@ -26,6 +28,52 @@ class MLPEncoder(nn.Module):
             current_dim = hidden_dim
 
         self.layers["latent"] = nn.Linear(current_dim, latent_dim)
+
+    def forward(self, inputs: Tensor) -> Tensor:
+        x = inputs
+        for layer in self.layers.values():
+            x = layer(x)
+        return x
+
+
+class CNNEncoder(nn.Module):
+    def __init__(
+        self,
+        input_shape: tuple[int, int, int],
+        hidden_channels: list[int],
+        latent_channels: int,
+    ) -> None:
+        super().__init__()
+        self.input_shape = input_shape
+        self.hidden_channels = hidden_channels
+        self.latent_channels = latent_channels
+
+        self.layers = nn.ModuleDict()
+
+        kernel_size = 3
+        stride = 2
+        padding = kernel_size // 2
+        channels, height, width = input_shape
+        for index, out_channels in enumerate(hidden_channels):
+            self.layers[f"conv_{index}"] = Conv2dNormActivation(
+                in_channels=channels,
+                out_channels=out_channels,
+                kernel_size=kernel_size,
+                stride=stride,
+                padding=padding,
+                norm_layer=nn.BatchNorm2d,
+                activation_layer=nn.ReLU,
+                bias=False,
+            )
+            channels = out_channels
+
+        self.layers["latent"] = nn.Conv2d(
+            in_channels=channels,
+            out_channels=latent_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+        )
 
     def forward(self, inputs: Tensor) -> Tensor:
         x = inputs

@@ -67,9 +67,12 @@ def plot_images(
 
 
 def project_latents(
-    latents: np.ndarray,  # (N, L)
+    latents: np.ndarray,  # (N, L) or (N, C, H, W)
     random_state: int = 42,
 ) -> np.ndarray:  # (N, 2)
+    if latents.ndim > 2:
+        latents = latents.reshape(latents.shape[0], -1)
+
     if latents.ndim != 2 or latents.shape[1] < 2:
         msg = "Expected latents with shape (N, L), where L >= 2."
         logger.error(msg)

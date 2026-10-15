@@ -30,12 +30,21 @@ class BaseModule(ABC):
         model: "BaseModel",
         optimizer: torch.optim.Optimizer,
         loss_fn: nn.Module,
+        calculate_perceptual_metrics: bool = True,
     ) -> None:
         self.model = model
         self.optimizer = optimizer
         self.loss_fn = loss_fn
+        self.calculate_perceptual_metrics = calculate_perceptual_metrics
 
         self.device = None
+
+        if self.calculate_perceptual_metrics:
+            msg = (
+                "Perceptual metrics (LPIPS and DISTS) are enabled. "
+                "Computing them for every batch slows down training and validation."
+            )
+            logger.warning(msg)
 
     @property
     def name(self):
@@ -77,48 +86,56 @@ class BaseModule(ABC):
         outputs = out.outputs  # reconstruction from the decoder
         targets = out.inputs  # ground-truth data from the dataset
 
-        perceptual_outputs = outputs
-        perceptual_targets = targets
+        metrics = {"loss": out.loss}
+        mse = F.mse_loss(outputs, targets)
+        metrics = {**metrics, "mse": mse}
+        mae = F.l1_loss(outputs, targets)
+        metrics = {**metrics, "mae": mae}
 
-        if perceptual_outputs.shape[1] != 3:
-            if perceptual_outputs.shape[1] == 1:
-                perceptual_outputs = perceptual_outputs.repeat(1, 3, 1, 1)
-                perceptual_targets = perceptual_targets.repeat(1, 3, 1, 1)
-            else:
-                msg = f"Perceptual metrics require images with 1 or 3 channels, got {perceptual_outputs.shape[1]}."
-                logger.error(msg)
-                raise ValueError(msg)
+        ssim = structural_similarity_index_measure(
+            outputs,
+            targets,
+            data_range=1.0,
+        )
+        metrics = {**metrics, "ssim": ssim}
+        psnr = peak_signal_noise_ratio(
+            outputs,
+            targets,
+            data_range=1.0,
+            dim=(1, 2, 3),
+            reduction="elementwise_mean",
+        )
+        metrics = {**metrics, "psnr": psnr}
 
-        metrics = {
-            "loss": out.loss,
-            "mse": F.mse_loss(outputs, targets),
-            "mae": F.l1_loss(outputs, targets),
-            "ssim": structural_similarity_index_measure(
-                outputs,
-                targets,
-                data_range=1.0,
-            ),
-            "psnr": peak_signal_noise_ratio(
-                outputs,
-                targets,
-                data_range=1.0,
-                dim=(1, 2, 3),
-                reduction="elementwise_mean",
-            ),
-            "lpips": learned_perceptual_image_patch_similarity(
+        if self.calculate_perceptual_metrics:
+            perceptual_outputs = outputs
+            perceptual_targets = targets
+
+            if perceptual_outputs.shape[1] != 3:
+                if perceptual_outputs.shape[1] == 1:
+                    perceptual_outputs = perceptual_outputs.repeat(1, 3, 1, 1)
+                    perceptual_targets = perceptual_targets.repeat(1, 3, 1, 1)
+                else:
+                    msg = f"Perceptual metrics require images with 1 or 3 channels, got {perceptual_outputs.shape[1]}."
+                    logger.error(msg)
+                    raise ValueError(msg)
+
+            lpips = learned_perceptual_image_patch_similarity(
                 perceptual_outputs,
                 perceptual_targets,
                 # AlexNet requires at least 31x31 inputs; SqueezeNet supports 17x17 and VGG supports 16x16.
                 net_type="squeeze",
                 reduction="mean",
                 normalize=True,
-            ),
-            "dists": deep_image_structure_and_texture_similarity(
+            )
+            metrics = {**metrics, "lpips": lpips}
+
+            dists = deep_image_structure_and_texture_similarity(
                 perceptual_outputs,
                 perceptual_targets,
                 reduction="mean",
-            ),
-        }
+            )
+            metrics = {**metrics, "dists": dists}
 
         return {name: value.item() for name, value in metrics.items()}
 

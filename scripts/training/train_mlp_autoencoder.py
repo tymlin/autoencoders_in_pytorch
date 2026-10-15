@@ -78,6 +78,7 @@ if __name__ == "__main__":
         model=model,
         optimizer=optimizer,
         loss_fn=loss_fn,
+        calculate_perceptual_metrics=True,
     )
 
     trainer = Trainer(

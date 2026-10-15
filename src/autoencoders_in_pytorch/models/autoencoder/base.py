@@ -5,6 +5,14 @@ import torch
 import torchinfo
 from torch import Tensor, nn
 
+from autoencoders_in_pytorch.models.outputs import (
+    AutoencoderOutput,
+    DecoderOutput,
+    EncoderOutput,
+    VariationalAutoencoderOutput,
+    VariationalEncoderOutput,
+)
+
 
 class BaseModel(nn.Module, ABC):
     name: str
@@ -54,26 +62,36 @@ class BaseModel(nn.Module, ABC):
 
 
 class BaseAutoencoder(BaseModel, ABC):
-    def encode(self, inputs: Tensor) -> Tensor:
+    def encode(self, inputs: Tensor) -> EncoderOutput:
         return self.encoder(inputs)
 
-    def decode(self, latents: Tensor) -> Tensor:
+    def decode(self, latents: Tensor) -> DecoderOutput:
         return self.decoder(latents)
 
-    def forward(self, inputs: Tensor) -> tuple[Tensor, Tensor]:
-        latents = self.encode(inputs)
-        outputs = self.decode(latents)
-        return outputs, latents
+    def forward(self, inputs: Tensor) -> AutoencoderOutput:
+        encoder_output = self.encode(inputs)
+        decoder_output = self.decode(encoder_output.latents)
+        output = AutoencoderOutput(
+            latents=encoder_output.latents,
+            outputs=decoder_output.outputs,
+        )
+        return output
 
 
 class BaseVariationalAutoencoder(BaseModel, ABC):
-    def encode(self, inputs: Tensor) -> tuple[Tensor, Tensor, Tensor]:
+    def encode(self, inputs: Tensor) -> VariationalEncoderOutput:
         return self.encoder(inputs)
 
-    def decode(self, latents: Tensor) -> Tensor:
+    def decode(self, latents: Tensor) -> DecoderOutput:
         return self.decoder(latents)
 
-    def forward(self, inputs: Tensor) -> tuple[Tensor, Tensor, Tensor, Tensor]:
-        latents, mu, logvar = self.encode(inputs)  # z is our latents
-        outputs = self.decode(latents)
-        return outputs, latents, mu, logvar
+    def forward(self, inputs: Tensor) -> VariationalAutoencoderOutput:
+        encoder_output = self.encode(inputs)
+        decoder_output = self.decode(encoder_output.latents)
+        output = VariationalAutoencoderOutput(
+            outputs=decoder_output.outputs,
+            latents=encoder_output.latents,
+            mu=encoder_output.mu,
+            logvar=encoder_output.logvar,
+        )
+        return output

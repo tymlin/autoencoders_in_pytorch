@@ -6,6 +6,13 @@ from autoencoders_in_pytorch.models.autoencoder import (
     MLPAutoencoder,
     MLPVariationalAutoencoder,
 )
+from autoencoders_in_pytorch.models.outputs import (
+    AutoencoderOutput,
+    DecoderOutput,
+    EncoderOutput,
+    VariationalAutoencoderOutput,
+    VariationalEncoderOutput,
+)
 from autoencoders_in_pytorch.models.types import Device, ModelStage
 
 __all__ = [
@@ -15,6 +22,11 @@ __all__ = [
     "MLPAutoencoder",
     "CNNAutoencoder",
     "MLPVariationalAutoencoder",
+    "EncoderOutput",
+    "VariationalEncoderOutput",
+    "DecoderOutput",
+    "AutoencoderOutput",
+    "VariationalAutoencoderOutput",
     "ModelStage",
     "Device",
 ]

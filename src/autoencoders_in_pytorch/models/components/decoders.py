@@ -3,6 +3,8 @@ import math
 from torch import Tensor, nn
 from torchvision.ops import Conv2dNormActivation
 
+from autoencoders_in_pytorch.models.outputs import DecoderOutput
+
 
 class MLPDecoder(nn.Module):
     def __init__(
@@ -33,11 +35,12 @@ class MLPDecoder(nn.Module):
             unflattened_size=self.output_shape,
         )
 
-    def forward(self, latents: Tensor) -> Tensor:
+    def forward(self, latents: Tensor) -> DecoderOutput:
         x = latents
         for layer in self.layers.values():
             x = layer(x)
-        return x
+        output = DecoderOutput(outputs=x)
+        return output
 
 
 class CNNDecoder(nn.Module):
@@ -98,11 +101,12 @@ class CNNDecoder(nn.Module):
         )
         self.layers["sigmoid"] = nn.Sigmoid()
 
-    def forward(self, latents: Tensor) -> Tensor:
+    def forward(self, latents: Tensor) -> DecoderOutput:
         x = latents
         for layer in self.layers.values():
             x = layer(x)
-        return x
+        output = DecoderOutput(outputs=x)
+        return output
 
 
 class CNNUpsampleDecoder(nn.Module):
@@ -163,8 +167,9 @@ class CNNUpsampleDecoder(nn.Module):
         )
         self.layers["sigmoid"] = nn.Sigmoid()
 
-    def forward(self, latents: Tensor) -> Tensor:
+    def forward(self, latents: Tensor) -> DecoderOutput:
         x = latents
         for layer in self.layers.values():
             x = layer(x)
-        return x
+        output = DecoderOutput(outputs=x)
+        return output

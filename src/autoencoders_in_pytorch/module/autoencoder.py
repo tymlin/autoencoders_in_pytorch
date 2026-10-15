@@ -112,8 +112,8 @@ class AutoencoderModule:
         inputs = inputs.to(self.device)
         targets = inputs
 
-        outputs, latents = self.model(inputs)
-        loss = self.loss_fn(outputs, targets)
+        model_output = self.model(inputs)
+        loss = self.loss_fn(model_output.outputs, targets)
         if stage == ModelStage.TRAIN:
             self.optimizer.zero_grad()
             loss.backward()
@@ -122,8 +122,8 @@ class AutoencoderModule:
         step_out = ModuleStepOut(
             inputs=inputs,
             targets=targets,
-            outputs=outputs,
-            latents=latents,
+            outputs=model_output.outputs,
+            latents=model_output.latents,
             loss=loss,
             labels=labels,
         )

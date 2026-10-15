@@ -4,6 +4,8 @@ import torch
 from torch import Tensor, nn
 from torchvision.ops import Conv2dNormActivation
 
+from autoencoders_in_pytorch.models.outputs import EncoderOutput, VariationalEncoderOutput
+
 
 class MLPEncoder(nn.Module):
     def __init__(
@@ -30,11 +32,12 @@ class MLPEncoder(nn.Module):
 
         self.layers["latent"] = nn.Linear(current_dim, latent_dim)
 
-    def forward(self, inputs: Tensor) -> Tensor:
+    def forward(self, inputs: Tensor) -> EncoderOutput:
         x = inputs
         for layer in self.layers.values():
             x = layer(x)
-        return x
+        output = EncoderOutput(latents=x)
+        return output
 
 
 class CNNEncoder(nn.Module):
@@ -76,11 +79,12 @@ class CNNEncoder(nn.Module):
             padding=padding,
         )
 
-    def forward(self, inputs: Tensor) -> Tensor:
+    def forward(self, inputs: Tensor) -> EncoderOutput:
         x = inputs
         for layer in self.layers.values():
             x = layer(x)
-        return x
+        output = EncoderOutput(latents=x)
+        return output
 
 
 class MLPVariationalEncoder(nn.Module):
@@ -109,7 +113,7 @@ class MLPVariationalEncoder(nn.Module):
         self.mu = nn.Linear(current_dim, latent_dim)
         self.logvar = nn.Linear(current_dim, latent_dim)
 
-    def forward(self, inputs: Tensor) -> tuple[Tensor, Tensor, Tensor]:
+    def forward(self, inputs: Tensor) -> VariationalEncoderOutput:
         x = inputs
         for layer in self.layers.values():
             x = layer(x)
@@ -120,6 +124,11 @@ class MLPVariationalEncoder(nn.Module):
         # reparametrization
         std = torch.exp(0.5 * logvar)  # std = e^(0.5*log(std^2)) = e^(log(sqrt(std^2))); log(std^2) = logvar
         eps = torch.randn_like(std, device=std.device)
-        z = mu + eps * std  # z is our latents
+        z = mu + std * eps
 
-        return z, mu, logvar
+        output = VariationalEncoderOutput(
+            latents=z,  # z is our latents
+            mu=mu,
+            logvar=logvar,
+        )
+        return output

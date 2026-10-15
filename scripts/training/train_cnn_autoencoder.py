@@ -68,7 +68,7 @@ if __name__ == "__main__":
     model = CNNAutoencoder(
         encoder_input_shape=image_shape,
         encoder_hidden_channels=[8, 16],
-        latent_channels=32,
+        latent_channels=4,
         decoder_hidden_channels=[16, 8],
         decoder_output_shape=image_shape,
     )

@@ -66,9 +66,9 @@ class VAELoss(nn.Module):
 
     def extra_repr(self) -> str:
         return (
-            f"reconstruction_loss_reduction={self.reconstruction_loss_reduction!r},\n"
-            f"reconstruction_loss_weight={self.reconstruction_loss_weight},\n"
-            f"kl_loss_weight={self.kl_loss_weight},\n"
-            f"scale_by_batch_size={self.scale_by_batch_size},\n"
-            f"kl_loss_fn={self._kl_loss_fn.__qualname__},\n"
+            f"reconstruction_loss_reduction: {self.reconstruction_loss_reduction!r},\n"
+            f"reconstruction_loss_weight: {self.reconstruction_loss_weight},\n"
+            f"kl_loss_weight: {self.kl_loss_weight},\n"
+            f"scale_by_batch_size: {self.scale_by_batch_size},\n"
+            f"kl_loss_fn: {self._kl_loss_fn.__qualname__},"
         )

@@ -3,6 +3,4 @@ from autoencoders_in_pytorch.models.autoencoder.autoencoder import (
     MLPAutoencoder,
 )
 from autoencoders_in_pytorch.models.autoencoder.base import BaseAutoencoder, BaseModel, BaseVariationalAutoencoder
-from autoencoders_in_pytorch.models.autoencoder.vae import (
-    MLPVariationalAutoencoder,
-)
+from autoencoders_in_pytorch.models.autoencoder.vae import CNNVariationalAutoencoder, MLPVariationalAutoencoder

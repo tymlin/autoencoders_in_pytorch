@@ -40,6 +40,7 @@ class CNNAutoencoder(BaseAutoencoder):
         decoder_output_shape: tuple[int, int, int] = (1, 28, 28),
     ):
         super().__init__()
+
         if encoder_hidden_channels is None:
             encoder_hidden_channels = []
         if decoder_hidden_channels is None:

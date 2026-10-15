@@ -1,5 +1,10 @@
 from autoencoders_in_pytorch.models.autoencoder.base import BaseVariationalAutoencoder
-from autoencoders_in_pytorch.models.components import MLPDecoder, MLPVariationalEncoder
+from autoencoders_in_pytorch.models.components import (
+    CNNDecoder,
+    CNNVariationalEncoder,
+    MLPDecoder,
+    MLPVariationalEncoder,
+)
 
 
 class MLPVariationalAutoencoder(BaseVariationalAutoencoder):
@@ -27,5 +32,34 @@ class MLPVariationalAutoencoder(BaseVariationalAutoencoder):
         self.decoder = MLPDecoder(
             latent_dim=latent_dim,
             hidden_dims=decoder_hidden_dims,
+            output_shape=decoder_output_shape,
+        )
+
+
+class CNNVariationalAutoencoder(BaseVariationalAutoencoder):
+    def __init__(
+        self,
+        encoder_input_shape: tuple[int, int, int] = (1, 28, 28),
+        encoder_hidden_channels: list[int] | None = None,
+        latent_channels: int = 32,
+        decoder_hidden_channels: list[int] | None = None,
+        decoder_output_shape: tuple[int, int, int] = (1, 28, 28),
+    ):
+        super().__init__()
+
+        if encoder_hidden_channels is None:
+            encoder_hidden_channels = []
+        if decoder_hidden_channels is None:
+            decoder_hidden_channels = []
+
+        self.encoder = CNNVariationalEncoder(
+            input_shape=encoder_input_shape,
+            hidden_channels=encoder_hidden_channels,
+            latent_channels=latent_channels,
+        )
+
+        self.decoder = CNNDecoder(
+            latent_channels=latent_channels,
+            hidden_channels=decoder_hidden_channels,
             output_shape=decoder_output_shape,
         )

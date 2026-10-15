@@ -1,7 +1,6 @@
 import torch
 from torch import nn
 
-from autoencoders_in_pytorch.loggers import logger
 from autoencoders_in_pytorch.models import Device, MLPAutoencoder
 from autoencoders_in_pytorch.module import AutoencoderModule
 from autoencoders_in_pytorch.utils.torch_utils import get_device_and_id
@@ -12,17 +11,17 @@ BATCH_SIZE: int = 2
 if __name__ == "__main__":
     model = MLPAutoencoder(
         encoder_input_shape=(1, 28, 28),
-        encoder_hidden_dims=[128],
+        encoder_hidden_dims=[128, 64],
         latent_dim=32,
-        decoder_hidden_dims=[128],
+        decoder_hidden_dims=[64, 128],
         decoder_output_shape=(1, 28, 28),
     )
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
-    loss = nn.MSELoss()
+    loss_fn = nn.MSELoss()
     module = AutoencoderModule(
         model=model,
         optimizer=optimizer,
-        loss_fn=loss,
+        loss_fn=loss_fn,
     )
     resolved_device, _ = get_device_and_id(DEVICE)
     module.setup(device=resolved_device)

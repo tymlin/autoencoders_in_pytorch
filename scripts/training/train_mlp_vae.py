@@ -69,7 +69,7 @@ if __name__ == "__main__":
     model = MLPVariationalAutoencoder(
         encoder_input_shape=image_shape,
         encoder_hidden_dims=[128, 64],
-        latent_dim=2,
+        latent_dim=32,
         decoder_hidden_dims=[64, 128],
         decoder_output_shape=image_shape,
     )

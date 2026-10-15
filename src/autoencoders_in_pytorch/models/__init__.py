@@ -3,6 +3,7 @@ from autoencoders_in_pytorch.models.autoencoder import (
     BaseModel,
     BaseVariationalAutoencoder,
     CNNAutoencoder,
+    CNNVariationalAutoencoder,
     MLPAutoencoder,
     MLPVariationalAutoencoder,
 )
@@ -22,6 +23,7 @@ __all__ = [
     "MLPAutoencoder",
     "CNNAutoencoder",
     "MLPVariationalAutoencoder",
+    "CNNVariationalAutoencoder",
     "EncoderOutput",
     "VariationalEncoderOutput",
     "DecoderOutput",

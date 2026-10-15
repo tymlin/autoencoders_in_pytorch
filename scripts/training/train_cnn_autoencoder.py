@@ -73,11 +73,11 @@ if __name__ == "__main__":
         decoder_output_shape=image_shape,
     )
     optimizer = torch.optim.Adam(model.parameters(), lr=config.optimizer.lr, weight_decay=config.optimizer.weight_decay)
-    loss = nn.MSELoss()
+    loss_fn = nn.MSELoss()
     module = AutoencoderModule(
         model=model,
         optimizer=optimizer,
-        loss_fn=loss,
+        loss_fn=loss_fn,
     )
 
     trainer = Trainer(

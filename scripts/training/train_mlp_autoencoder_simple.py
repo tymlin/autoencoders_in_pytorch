@@ -33,11 +33,11 @@ if __name__ == "__main__":
         decoder_output_shape=(1, 28, 28),
     )
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-    loss = nn.MSELoss()
+    loss_fn = nn.MSELoss()
     module = AutoencoderModule(
         model=model,
         optimizer=optimizer,
-        loss_fn=loss,
+        loss_fn=loss_fn,
     )
 
     datamodule.setup_dataloaders()

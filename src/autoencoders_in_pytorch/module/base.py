@@ -65,10 +65,12 @@ class BaseModule(ABC):
     def _common_step(self, batch: tuple, stage: ModelStage) -> ModuleStepOut:
         raise NotImplementedError()
 
-    @abstractmethod
     @torch.no_grad()
     def compute_metrics(self, out: ModuleStepOut) -> dict[str, float]:
-        raise NotImplementedError()
+        metrics = {
+            "loss": out.loss.item(),
+        }
+        return metrics
 
     def state_dict(self) -> dict[str, Any]:
         model_state = self.model.state_dict()

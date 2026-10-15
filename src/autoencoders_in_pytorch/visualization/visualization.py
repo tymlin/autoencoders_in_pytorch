@@ -3,8 +3,11 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import umap
+from matplotlib.ticker import MaxNLocator
 
 from autoencoders_in_pytorch.loggers import logger
+from autoencoders_in_pytorch.metrics import MetricsContainer
+from autoencoders_in_pytorch.models import ModelStage
 from autoencoders_in_pytorch.utils.files import create_directory
 
 
@@ -144,6 +147,67 @@ def plot_latents(
         save_filepath = Path(save_filepath)
         create_directory(save_filepath.parent, parents=True, exist_ok=True)
         fig.savefig(save_filepath, dpi=200, bbox_inches="tight")
+        logger.info(f"Saved figure to '{save_filepath}'")
+
+    if show_plot:
+        plt.show()
+
+    plt.close(fig)
+    return fig
+
+
+def plot_metric(
+    metrics: dict[ModelStage, MetricsContainer],
+    metric_name: str,
+    save_filepath: str | Path | None = None,
+    show_plot: bool = False,
+) -> plt.Figure:
+    colors = {
+        ModelStage.TRAIN: "limegreen",
+        ModelStage.VALIDATION: "royalblue",
+    }
+
+    fig, ax = plt.subplots(figsize=(10, 6), layout="constrained")
+
+    for stage, container in metrics.items():
+        epochs = []
+        values = []
+
+        for epoch in container.get_epochs():
+            epoch_metrics = container.mean(epoch=epoch)
+            if metric_name not in epoch_metrics:
+                continue
+
+            epochs.append(epoch + 1)
+            values.append(epoch_metrics[metric_name])
+
+        if values:
+            ax.plot(
+                epochs,
+                values,
+                label=stage.value,
+                color=colors[stage],
+                marker="o",
+                markersize=4,
+            )
+
+    if not ax.lines:
+        plt.close(fig)
+        msg = f"No values recorded for metric {metric_name!r}."
+        logger.error(msg)
+        raise ValueError(msg)
+
+    ax.set_title(metric_name)
+    ax.set_xlabel("Epoch")
+    ax.set_ylabel(metric_name)
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    ax.grid(alpha=0.3)
+    ax.legend()
+
+    if save_filepath is not None:
+        save_filepath = Path(save_filepath)
+        create_directory(save_filepath.parent, parents=True, exist_ok=True)
+        fig.savefig(save_filepath, dpi=200)
         logger.info(f"Saved figure to '{save_filepath}'")
 
     if show_plot:

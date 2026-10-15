@@ -14,7 +14,7 @@ from autoencoders_in_pytorch.module import BaseModule
 from autoencoders_in_pytorch.utils.files import create_directory, get_relpath, save_json
 from autoencoders_in_pytorch.utils.progress import create_progress, progress_to_str
 from autoencoders_in_pytorch.utils.torch_utils import get_device_and_id
-from autoencoders_in_pytorch.visualization import plot_images, plot_latents
+from autoencoders_in_pytorch.visualization import plot_images, plot_latents, plot_metric
 
 
 class Trainer:
@@ -49,8 +49,10 @@ class Trainer:
         create_directory(ckpt_dirpath, parents=True, exist_ok=True)
         self.ckpt_filepath = ckpt_dirpath / "last.pth"
         self.metrics_filepath = self.run_dirpath / "metrics.json"
-        self.plots_dirpath = Path(self.run_dirpath) / "plots"
-        create_directory(self.plots_dirpath, parents=True, exist_ok=True)
+        self.results_plots_dirpath = Path(self.run_dirpath) / "results_plots"
+        self.metrics_plots_dirpath = Path(self.run_dirpath) / "metrics_plots"
+        create_directory(self.results_plots_dirpath, parents=True, exist_ok=True)
+        create_directory(self.metrics_plots_dirpath, parents=True, exist_ok=True)
 
         self.visu_sample_indices = sorted(
             random.sample(
@@ -104,6 +106,7 @@ class Trainer:
 
             self.log_epoch_summary()
             self.save_metrics()
+            self.plot_metrics()
             self.save_checkpoint()
 
     def training_epoch(self, dataloader: torch.utils.data.DataLoader):
@@ -171,20 +174,20 @@ class Trainer:
             images=out.inputs,
             sample_indices=self.visu_sample_indices,
             title=f"Epoch {epoch:03d} - inputs",
-            save_filepath=(self.plots_dirpath / "inputs" / f"epoch_{epoch:03d}.png"),
+            save_filepath=(self.results_plots_dirpath / "inputs" / f"epoch_{epoch:03d}.png"),
         )
         plot_images(
             images=out.outputs,
             sample_indices=self.visu_sample_indices,
             title=f"Epoch {epoch:03d} - reconstructions",
-            save_filepath=(self.plots_dirpath / "reconstructions" / f"epoch_{epoch:03d}.png"),
+            save_filepath=(self.results_plots_dirpath / "reconstructions" / f"epoch_{epoch:03d}.png"),
         )
         plot_latents(
             latents=np.concatenate(latent_batches)[self.visu_latent_indices],
             labels=np.concatenate(label_batches)[self.visu_latent_indices],
             class_names=self.datamodule.val_ds.classes_int2str,
             title=f"Epoch {epoch} - latent space",
-            save_filepath=(self.plots_dirpath / "latents" / f"latents_epoch_{epoch:03d}.png"),
+            save_filepath=(self.results_plots_dirpath / "latents" / f"latents_epoch_{epoch:03d}.png"),
         )
 
     def add_metrics(
@@ -240,6 +243,18 @@ class Trainer:
     def save_metrics(self) -> None:
         metrics = self.get_all_metrics()
         save_json(filepath=self.metrics_filepath, data=metrics)
+
+    def plot_metrics(self) -> None:
+        metric_names: set[str] = set()
+        for container in self.metrics.values():
+            metric_names.update(container.get_metric_names())
+
+        for name in sorted(metric_names):
+            plot_metric(
+                metrics=self.metrics,
+                metric_name=name,
+                save_filepath=self.metrics_plots_dirpath / f"{name}.png",
+            )
 
     def save_checkpoint(self):
         self.module.model.eval()

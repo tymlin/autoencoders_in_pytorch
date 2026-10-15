@@ -66,3 +66,9 @@ class MetricsContainer:
 
     def to_records(self) -> list[dict[str, Any]]:
         return [asdict(record) for record in self._records]
+
+    def get_metric_names(self) -> list[str]:
+        return sorted({name for record in self._records for name in record.metrics})
+
+    def get_epochs(self) -> list[int]:
+        return sorted({record.epoch for record in self._records})

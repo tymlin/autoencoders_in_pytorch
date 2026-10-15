@@ -12,11 +12,12 @@ from autoencoders_in_pytorch.utils.files import save_json
 from autoencoders_in_pytorch.utils.torch_utils import seed_everything
 
 DEVICE: Device = Device.CPU
-BATCH_SIZE: int = 64
-EPOCHS: int = 10
+BATCH_SIZE: int = 128
+EPOCHS: int = 100
 
 if __name__ == "__main__":
     config = RunConfig(
+        run_name_suffix="mlp-ae_mnist",
         data=DataConfig(
             dataset=DatasetType.MNIST,
             batch_size=BATCH_SIZE,

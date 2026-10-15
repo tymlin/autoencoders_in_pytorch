@@ -67,7 +67,7 @@ class OptimizerConfig(BaseModel):
     model_config = ConfigDict(extra="forbid", validate_default=True)
 
     lr: float = Field(
-        default=1e-3,
+        default=0.0005,
         gt=0,
         allow_inf_nan=False,
         description="Learning rate used by the optimizer.",

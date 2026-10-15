@@ -4,15 +4,15 @@ from autoencoders_in_pytorch.loggers import logger
 from autoencoders_in_pytorch.models import MLPVariationalAutoencoder
 
 if __name__ == "__main__":
+    x = torch.rand(2, 1, 28, 28)
+    bs, channels, height, width = x.shape
     model = MLPVariationalAutoencoder(
-        encoder_input_shape=(1, 28, 28),
+        encoder_input_shape=(channels, height, width),
         encoder_hidden_dims=[128, 64],
         latent_dim=32,
         decoder_hidden_dims=[64, 128],
-        decoder_output_shape=(1, 28, 28),
+        decoder_output_shape=(channels, height, width),
     )
-    x = torch.rand(2, 1, 28, 28)
-    bs, channels, height, width = x.shape
     input_shape: tuple[int, int, int, int] = (bs, channels, height, width)
     outputs, latents, mu, logvar = model(x)
     logger.info(f"Input shape: {x.shape}")

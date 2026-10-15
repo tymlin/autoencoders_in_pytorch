@@ -203,11 +203,16 @@ class Trainer:
 
     def log_module_summary(self):
         model_structure = str(self.module.model)
+        image, _ = self.datamodule.train_ds[0]
+        channels, height, width = image.shape
+        input_shape = (self.datamodule.batch_size, channels, height, width)
+        model_summary = self.module.model.summary(input_shape)
         optim_info = str(self.module.optimizer)
         loss_fn_info = str(self.module.loss_fn)
 
         module_info_dict = {
-            "Model": model_structure,
+            "Model structure": model_structure,
+            "Model summary": model_summary,
             "Optimizer": optim_info,
             "Loss function": loss_fn_info,
         }

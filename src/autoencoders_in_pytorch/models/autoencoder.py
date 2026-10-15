@@ -1,6 +1,7 @@
 from abc import ABC
 
 import torch
+import torchinfo
 from torch import Tensor, nn
 
 from autoencoders_in_pytorch.models.decoders import CNNDecoder, MLPDecoder
@@ -37,6 +38,20 @@ class BaseAutoencoder(nn.Module, ABC):
         latents = self.encode(inputs)
         outputs = self.decode(latents)
         return outputs, latents
+
+    def summary(self, example_input_shape: tuple[int, int, int, int], depth: int = 4) -> str:
+        col_names = ["input_size", "output_size", "num_params", "params_percent"]
+        model_summary = str(
+            torchinfo.summary(
+                self,
+                input_size=example_input_shape,
+                depth=depth,
+                col_names=col_names,
+                verbose=0,
+                device=self.device,
+            )
+        )
+        return model_summary
 
 
 class MLPAutoencoder(BaseAutoencoder):

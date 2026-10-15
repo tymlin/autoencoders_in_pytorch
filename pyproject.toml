@@ -16,6 +16,7 @@ dependencies = [
     "pydantic>=2.14.1",
     "rich>=15.0.0",
     "torch>=2.14.1",
+    "torchinfo>=1.8.0",
     "torchvision>=0.29.1",
     "umap-learn>=0.5.12",
 ]

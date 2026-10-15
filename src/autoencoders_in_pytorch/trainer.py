@@ -10,7 +10,7 @@ from autoencoders_in_pytorch.data import DataModule
 from autoencoders_in_pytorch.loggers import log_breaking_point, logger
 from autoencoders_in_pytorch.metrics import MetricsContainer
 from autoencoders_in_pytorch.models import Device, ModelStage
-from autoencoders_in_pytorch.module import AutoencoderModule
+from autoencoders_in_pytorch.module import BaseModule
 from autoencoders_in_pytorch.utils.files import create_directory, get_relpath, save_json
 from autoencoders_in_pytorch.utils.progress import create_progress, progress_to_str
 from autoencoders_in_pytorch.utils.torch_utils import get_device_and_id
@@ -20,7 +20,7 @@ from autoencoders_in_pytorch.visualization import plot_images, plot_latents
 class Trainer:
     def __init__(
         self,
-        module: AutoencoderModule,
+        module: BaseModule,
         datamodule: DataModule,
         max_epochs: int,
         run_dirpath: str | Path,

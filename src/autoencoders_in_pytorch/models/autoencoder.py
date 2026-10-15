@@ -5,7 +5,7 @@ import torchinfo
 from torch import Tensor, nn
 
 from autoencoders_in_pytorch.models.decoders import CNNDecoder, MLPDecoder
-from autoencoders_in_pytorch.models.encoders import CNNEncoder, MLPEncoder
+from autoencoders_in_pytorch.models.encoders import CNNEncoder, MLPEncoder, MLPVariationalEncoder
 
 
 class BaseAutoencoder(nn.Module, ABC):
@@ -107,3 +107,40 @@ class CNNAutoencoder(BaseAutoencoder):
             hidden_channels=decoder_hidden_channels,
             output_shape=decoder_output_shape,
         )
+
+
+class MLPVariationalAutoencoder(BaseAutoencoder):
+    def __init__(
+        self,
+        encoder_input_shape: tuple[int, int, int] = (1, 28, 28),
+        encoder_hidden_dims: list[int] | None = None,
+        latent_dim: int = 32,
+        decoder_hidden_dims: list[int] | None = None,
+        decoder_output_shape: tuple[int, int, int] = (1, 28, 28),
+    ):
+        super().__init__()
+
+        if encoder_hidden_dims is None:
+            encoder_hidden_dims = []
+        if decoder_hidden_dims is None:
+            decoder_hidden_dims = []
+
+        self.encoder = MLPVariationalEncoder(
+            input_shape=encoder_input_shape,
+            hidden_dims=encoder_hidden_dims,
+            latent_dim=latent_dim,
+        )
+
+        self.decoder = MLPDecoder(
+            latent_dim=latent_dim,
+            hidden_dims=decoder_hidden_dims,
+            output_shape=decoder_output_shape,
+        )
+
+    def encode(self, inputs: Tensor) -> tuple[Tensor, Tensor, Tensor]:
+        return self.encoder(inputs)
+
+    def forward(self, inputs: Tensor) -> tuple[Tensor, Tensor, Tensor, Tensor]:
+        latents, mu, logvar = self.encode(inputs)  # z is our latents
+        outputs = self.decode(latents)
+        return outputs, latents, mu, logvar

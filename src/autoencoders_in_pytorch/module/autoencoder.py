@@ -9,7 +9,7 @@ from autoencoders_in_pytorch.loggers import logger
 from autoencoders_in_pytorch.models import ModelStage
 
 if TYPE_CHECKING:
-    from autoencoders_in_pytorch.models import BaseAutoencoder
+    from autoencoders_in_pytorch.models import BaseModel
 
 
 @dataclass
@@ -60,13 +60,13 @@ class ModuleStepOut:
 
 
 class AutoencoderModule:
-    model: "BaseAutoencoder"
+    model: "BaseModel"
     optimizer: torch.optim.Optimizer
     loss_fn: nn.Module
 
     def __init__(
         self,
-        model: "BaseAutoencoder",
+        model: "BaseModel",
         optimizer: torch.optim.Optimizer,
         loss_fn: nn.Module,
     ) -> None:

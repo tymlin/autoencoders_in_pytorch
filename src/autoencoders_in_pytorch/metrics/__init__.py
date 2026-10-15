@@ -1,3 +1,3 @@
-from autoencoders_in_pytorch.metrics.metrics import MetricsContainer, MetricsRecord
+from autoencoders_in_pytorch.metrics.container import MetricsContainer, MetricsRecord
 
 __all__ = ["MetricsContainer", "MetricsRecord"]

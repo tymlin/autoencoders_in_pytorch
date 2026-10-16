@@ -7,6 +7,7 @@ from autoencoders_in_pytorch.consts import RUNS_DIRPATH
 from autoencoders_in_pytorch.data import DatasetSplit, DatasetType
 from autoencoders_in_pytorch.loggers import logger
 from autoencoders_in_pytorch.models import Device
+from autoencoders_in_pytorch.utils.torch_utils import auto_detect_device
 
 
 class DataConfig(BaseModel):
@@ -105,8 +106,11 @@ class TrainerConfig(BaseModel):
         description="Number of training epochs.",
     )
     device: Device = Field(
-        default=Device.CPU,
-        description="Device type used for model execution: CPU, CUDA or MPS.",
+        default_factory=auto_detect_device,
+        description=(
+            "Device type used for model execution. Defaults to an automatically selected available device, "
+            "preferring CUDA, then MPS, then CPU."
+        ),
     )
     device_id: int = Field(
         default=0,

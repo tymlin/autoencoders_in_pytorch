@@ -31,6 +31,22 @@ def check_torch_devices_availability(as_dict: bool = False) -> dict[Device, bool
     return available_devices
 
 
+def auto_detect_device() -> Device:
+    """Select an available device, preferring CUDA, then MPS, then CPU.
+
+    :return Device: Selected device
+    """
+    available_devices = check_torch_devices_availability()
+
+    if Device.CUDA in available_devices:
+        return Device.CUDA
+
+    if Device.MPS in available_devices:
+        return Device.MPS
+
+    return Device.CPU
+
+
 def get_device_and_id(device: Device, device_id: int = 0) -> tuple[str, int]:
     available_devices = check_torch_devices_availability()
     device_count = torch.cuda.device_count()

@@ -5,13 +5,12 @@ from autoencoders_in_pytorch.config import DataConfig, RunConfig, TrainerConfig
 from autoencoders_in_pytorch.consts import NOW
 from autoencoders_in_pytorch.data import DATASET_CLASSES, DataModule, DatasetSplit, DatasetType, build_transform
 from autoencoders_in_pytorch.loggers import configure_logger, logger
-from autoencoders_in_pytorch.models import CNNAutoencoder, Device
+from autoencoders_in_pytorch.models import CNNAutoencoder
 from autoencoders_in_pytorch.module import AutoencoderModule
 from autoencoders_in_pytorch.trainer import Trainer
 from autoencoders_in_pytorch.utils.files import save_json
 from autoencoders_in_pytorch.utils.torch_utils import seed_everything
 
-DEVICE: Device = Device.CPU
 BATCH_SIZE: int = 128
 EPOCHS: int = 100
 
@@ -25,7 +24,6 @@ if __name__ == "__main__":
         ),
         trainer=TrainerConfig(
             max_epochs=EPOCHS,
-            device=DEVICE,
         ),
     )
 

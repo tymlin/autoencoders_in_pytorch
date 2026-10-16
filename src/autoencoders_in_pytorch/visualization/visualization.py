@@ -4,11 +4,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import umap
 from matplotlib.ticker import MaxNLocator
+from sklearn.manifold import TSNE
 
 from autoencoders_in_pytorch.loggers import logger
 from autoencoders_in_pytorch.metrics import MetricsContainer
 from autoencoders_in_pytorch.models import ModelStage
 from autoencoders_in_pytorch.utils.files import create_directory
+from autoencoders_in_pytorch.visualization.types import ProjectionMethod
 
 
 def plot_images(
@@ -72,6 +74,7 @@ def plot_images(
 def project_latents(
     latents: np.ndarray,  # (N, L) or (N, C, H, W)
     random_state: int = 42,
+    method: ProjectionMethod = ProjectionMethod.UMAP,
 ) -> np.ndarray:  # (N, 2)
     if latents.ndim > 2:
         latents = latents.reshape(latents.shape[0], -1)
@@ -85,30 +88,44 @@ def project_latents(
         return latents
 
     if len(latents) < 4:
-        msg = "This UMAP projection requires at least four samples."
+        msg = "Latent projection requires at least four samples."
         logger.error(msg)
         raise ValueError(msg)
 
-    reducer = umap.UMAP(
-        n_components=2,
-        n_neighbors=min(15, len(latents) - 1),
-        min_dist=0.1,
-        random_state=random_state,
-        n_jobs=1,
-    )
+    if method == ProjectionMethod.UMAP:
+        reducer = umap.UMAP(
+            n_components=2,
+            n_neighbors=min(15, len(latents) - 1),
+            min_dist=0.1,
+            random_state=random_state,
+            n_jobs=1,
+        )
+    elif method == ProjectionMethod.TSNE:
+        reducer = TSNE(
+            n_components=2,
+            perplexity=min(30.0, len(latents) - 1),
+            init="pca",
+            learning_rate="auto",
+            random_state=random_state,
+        )
+    else:
+        msg = f"Unsupported latent projection method: {method}."
+        logger.error(msg)
+        raise ValueError(msg)
     reduced = reducer.fit_transform(latents)
     return reduced
 
 
 def plot_latents(
-    latents: np.ndarray,  # (N, L)
+    latents: np.ndarray,  # (N, L) or (N, C, H, W)
     labels: np.ndarray,  # (N,)
     class_names: dict[int, str],
     title: str = "Latent space",
     save_filepath: str | Path | None = None,
     show_plot: bool = False,
+    projection_method: ProjectionMethod = ProjectionMethod.UMAP,
 ) -> plt.Figure:
-    points = project_latents(latents)
+    points = project_latents(latents, method=projection_method)
 
     if points.ndim != 2 or points.shape[1] != 2 or len(points) != len(labels):
         msg = "Expected points with shape (N, 2) and matching labels."

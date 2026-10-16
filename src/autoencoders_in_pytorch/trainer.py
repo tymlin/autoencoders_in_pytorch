@@ -14,7 +14,7 @@ from autoencoders_in_pytorch.module import BaseModule
 from autoencoders_in_pytorch.utils.files import create_directory, get_relpath, save_json
 from autoencoders_in_pytorch.utils.progress import create_progress, progress_to_str
 from autoencoders_in_pytorch.utils.torch_utils import get_device_and_id
-from autoencoders_in_pytorch.visualization import plot_images, plot_latents, plot_metric
+from autoencoders_in_pytorch.visualization import ProjectionMethod, plot_images, plot_latents, plot_metric
 
 
 class Trainer:
@@ -28,6 +28,7 @@ class Trainer:
         device_id: int = 0,
         num_visu_samples: int = 36,
         num_visu_latents: int | None = None,
+        latent_projection_method: ProjectionMethod = ProjectionMethod.UMAP,
     ) -> None:
         self.module = module
         self.datamodule = datamodule
@@ -35,6 +36,7 @@ class Trainer:
         self.max_epochs = max_epochs
         self.num_visu_samples = num_visu_samples
         self.num_visu_latents = num_visu_latents
+        self.latent_projection_method = latent_projection_method
 
         self.metrics: dict[ModelStage, MetricsContainer] = {
             ModelStage.TRAIN: MetricsContainer(),
@@ -188,6 +190,7 @@ class Trainer:
             class_names=self.datamodule.val_ds.classes_int2str,
             title=f"Epoch {epoch} - latent space",
             save_filepath=(self.results_plots_dirpath / "latents" / f"latents_epoch_{epoch:03d}.png"),
+            projection_method=self.latent_projection_method,
         )
 
     def add_metrics(

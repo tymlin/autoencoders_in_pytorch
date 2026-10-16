@@ -97,6 +97,7 @@ if __name__ == "__main__":
         device_id=config.trainer.device_id,
         num_visu_samples=config.trainer.num_visu_samples,
         num_visu_latents=config.trainer.num_visu_latents,
+        latent_projection_method=config.trainer.latent_projection_method,
     )
 
     trainer.fit()

@@ -9,6 +9,7 @@ from autoencoders_in_pytorch.loggers import logger
 from autoencoders_in_pytorch.metrics import PerceptualMetrics
 from autoencoders_in_pytorch.models import Device
 from autoencoders_in_pytorch.utils.torch_utils import auto_detect_device
+from autoencoders_in_pytorch.visualization import ProjectionMethod
 
 
 class DataConfig(BaseModel):
@@ -136,7 +137,14 @@ class TrainerConfig(BaseModel):
         ge=4,
         description=(
             "Maximum number of validation samples used to visualize latent space. None uses all validation samples. "
-            "At least four samples are required for UMAP projection."
+            "At least four samples are required for latent projection."
+        ),
+    )
+    latent_projection_method: ProjectionMethod = Field(
+        default=ProjectionMethod.UMAP,
+        description=(
+            "Method used to project latent representations to two dimensions for visualization: 'umap' or 'tsne'. "
+            "Latent representations with exactly two features are plotted without projection."
         ),
     )
 

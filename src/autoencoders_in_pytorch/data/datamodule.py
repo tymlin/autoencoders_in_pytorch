@@ -17,6 +17,7 @@ class DataModule:
         inverse_transform: Compose | None = None,
         batch_size: int = 32,
         num_workers: int = 8,
+        persistent_workers: bool = False,
         pin_memory: bool = True,
         drop_last: bool = True,
         shuffle: bool = True,
@@ -31,6 +32,7 @@ class DataModule:
         self.inverse_transform = inverse_transform
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.persistent_workers = persistent_workers
         self.pin_memory = pin_memory
         self.drop_last = drop_last
         self.shuffle = shuffle
@@ -127,6 +129,7 @@ class DataModule:
             shuffle=shuffle,
             drop_last=drop_last,
             num_workers=self.num_workers,
+            persistent_workers=self.persistent_workers,
             pin_memory=self.pin_memory,
             collate_fn=collate_fn,
             generator=(self.train_generator if split == DatasetSplit.TRAIN else None),

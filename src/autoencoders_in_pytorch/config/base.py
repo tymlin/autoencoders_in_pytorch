@@ -1,10 +1,11 @@
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from autoencoders_in_pytorch.consts import RUNS_DIRPATH
 from autoencoders_in_pytorch.data import DatasetSplit, DatasetType
+from autoencoders_in_pytorch.loggers import logger
 from autoencoders_in_pytorch.models import Device
 
 
@@ -44,6 +45,12 @@ class DataConfig(BaseModel):
         ge=0,
         description="Number of subprocesses used for data loading. Zero loads data in the main process.",
     )
+    persistent_workers: bool = Field(
+        default=False,
+        description=(
+            "Whether to keep data loading workers alive between epochs. Requires `num_workers` greater than zero."
+        ),
+    )
     pin_memory: bool = Field(
         default=True,
         description=(
@@ -61,6 +68,15 @@ class DataConfig(BaseModel):
         default=True,
         description="Whether to shuffle training samples each epoch. Does not affect validation or testing.",
     )
+
+    @model_validator(mode="after")
+    def validate_persistent_workers(self) -> Self:
+        if self.persistent_workers and self.num_workers <= 0:
+            msg = "Persistent workers require `num_workers` greater than zero."
+            logger.error(msg)
+            raise ValueError(msg)
+
+        return self
 
 
 class OptimizerConfig(BaseModel):
@@ -96,6 +112,13 @@ class TrainerConfig(BaseModel):
         default=0,
         ge=0,
         description="CUDA device index. Ignored when using CPU or MPS.",
+    )
+    calculate_perceptual_metrics: bool = Field(
+        default=True,
+        description=(
+            "Whether to calculate LPIPS and DISTS in addition to basic reconstruction metrics during training "
+            "and validation. Enabling this increases computation time."
+        ),
     )
     num_visu_samples: int = Field(
         default=36,
@@ -143,5 +166,5 @@ class RunConfig(BaseModel):
     )
     trainer: TrainerConfig = Field(
         default_factory=TrainerConfig,
-        description="Training duration and device settings.",
+        description="Training duration, device, visualization and metric settings.",
     )

@@ -59,6 +59,7 @@ if __name__ == "__main__":
         test_ds=test_ds,
         batch_size=config.data.batch_size,
         num_workers=config.data.num_workers,
+        persistent_workers=config.data.persistent_workers,
         pin_memory=config.data.pin_memory,
         drop_last=config.data.drop_last,
         shuffle=config.data.shuffle,
@@ -86,7 +87,7 @@ if __name__ == "__main__":
         model=model,
         optimizer=optimizer,
         loss_fn=loss_fn,
-        calculate_perceptual_metrics=True,
+        calculate_perceptual_metrics=config.trainer.calculate_perceptual_metrics,
     )
 
     trainer = Trainer(

@@ -197,7 +197,7 @@ def plot_metric(
         logger.error(msg)
         raise ValueError(msg)
 
-    ax.set_title(metric_name)
+    ax.set_title(metric_name.upper())
     ax.set_xlabel("Epoch")
     ax.set_ylabel(metric_name)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))

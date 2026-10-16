@@ -86,6 +86,7 @@ class CNNDecoder(nn.Module):
                 stride=stride,
                 padding=padding,
                 output_padding=output_paddings[index],
+                bias=False,
             )
             self.layers[f"batch_norm_{index}"] = nn.BatchNorm2d(out_channels)
             self.layers[f"relu_{index}"] = nn.ReLU()

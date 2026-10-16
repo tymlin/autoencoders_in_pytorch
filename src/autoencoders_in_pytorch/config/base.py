@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from autoencoders_in_pytorch.consts import RUNS_DIRPATH
 from autoencoders_in_pytorch.data import DatasetSplit, DatasetType
 from autoencoders_in_pytorch.loggers import logger
+from autoencoders_in_pytorch.metrics import PerceptualMetrics
 from autoencoders_in_pytorch.models import Device
 from autoencoders_in_pytorch.utils.torch_utils import auto_detect_device
 
@@ -117,11 +118,12 @@ class TrainerConfig(BaseModel):
         ge=0,
         description="CUDA device index. Ignored when using CPU or MPS.",
     )
-    calculate_perceptual_metrics: bool = Field(
-        default=True,
+    calculate_perceptual_metrics: PerceptualMetrics | None = Field(
+        default=PerceptualMetrics.BOTH,
         description=(
-            "Whether to calculate LPIPS and DISTS in addition to basic reconstruction metrics during training "
-            "and validation. Enabling this increases computation time."
+            "Perceptual metrics calculated during training and validation: 'lpips', 'dists' or 'both'. "
+            "None disables perceptual metrics. Basic reconstruction metrics are always calculated. "
+            "Enabling perceptual metrics increases computation time."
         ),
     )
     num_visu_samples: int = Field(

@@ -12,6 +12,7 @@ from torchmetrics.functional.image import (
 )
 
 from autoencoders_in_pytorch.loggers import logger
+from autoencoders_in_pytorch.metrics import PerceptualMetrics
 from autoencoders_in_pytorch.models import ModelStage
 
 if TYPE_CHECKING:
@@ -30,7 +31,7 @@ class BaseModule(ABC):
         model: "BaseModel",
         optimizer: torch.optim.Optimizer,
         loss_fn: nn.Module,
-        calculate_perceptual_metrics: bool = True,
+        calculate_perceptual_metrics: PerceptualMetrics | None = PerceptualMetrics.LPIPS,
     ) -> None:
         self.model = model
         self.optimizer = optimizer
@@ -39,9 +40,14 @@ class BaseModule(ABC):
 
         self.device = None
 
-        if self.calculate_perceptual_metrics:
+        if self.calculate_perceptual_metrics is not None:
+            enabled_metrics = (
+                "LPIPS and DISTS"
+                if self.calculate_perceptual_metrics == PerceptualMetrics.BOTH
+                else self.calculate_perceptual_metrics.value.upper()
+            )
             msg = (
-                "Perceptual metrics (LPIPS and DISTS) are enabled. "
+                f"Perceptual metrics ({enabled_metrics}) are enabled. "
                 "Computing them for every batch slows down training and validation."
             )
             logger.warning(msg)
@@ -107,7 +113,7 @@ class BaseModule(ABC):
         )
         metrics = {**metrics, "psnr": psnr}
 
-        if self.calculate_perceptual_metrics:
+        if self.calculate_perceptual_metrics is not None:
             perceptual_outputs = outputs
             perceptual_targets = targets
 
@@ -120,22 +126,24 @@ class BaseModule(ABC):
                     logger.error(msg)
                     raise ValueError(msg)
 
-            lpips = learned_perceptual_image_patch_similarity(
-                perceptual_outputs,
-                perceptual_targets,
-                # AlexNet requires at least 31x31 inputs; SqueezeNet supports 17x17 and VGG supports 16x16.
-                net_type="squeeze",
-                reduction="mean",
-                normalize=True,
-            )
-            metrics = {**metrics, "lpips": lpips}
+            if self.calculate_perceptual_metrics in (PerceptualMetrics.LPIPS, PerceptualMetrics.BOTH):
+                lpips = learned_perceptual_image_patch_similarity(
+                    perceptual_outputs,
+                    perceptual_targets,
+                    # AlexNet requires at least 31x31 inputs; SqueezeNet supports 17x17 and VGG supports 16x16.
+                    net_type="squeeze",
+                    reduction="mean",
+                    normalize=True,
+                )
+                metrics = {**metrics, "lpips": lpips}
 
-            dists = deep_image_structure_and_texture_similarity(
-                perceptual_outputs,
-                perceptual_targets,
-                reduction="mean",
-            )
-            metrics = {**metrics, "dists": dists}
+            if self.calculate_perceptual_metrics in (PerceptualMetrics.DISTS, PerceptualMetrics.BOTH):
+                dists = deep_image_structure_and_texture_similarity(
+                    perceptual_outputs,
+                    perceptual_targets,
+                    reduction="mean",
+                )
+                metrics = {**metrics, "dists": dists}
 
         return {name: value.item() for name, value in metrics.items()}
 

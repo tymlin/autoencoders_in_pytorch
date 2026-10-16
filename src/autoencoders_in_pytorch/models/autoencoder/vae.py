@@ -44,6 +44,7 @@ class CNNVariationalAutoencoder(BaseVariationalAutoencoder):
         latent_channels: int = 32,
         decoder_hidden_channels: list[int] | None = None,
         decoder_output_shape: tuple[int, int, int] = (1, 28, 28),
+        encoder_downsample_latents: bool = True,
     ):
         super().__init__()
 
@@ -56,6 +57,7 @@ class CNNVariationalAutoencoder(BaseVariationalAutoencoder):
             input_shape=encoder_input_shape,
             hidden_channels=encoder_hidden_channels,
             latent_channels=latent_channels,
+            downsample_latents=encoder_downsample_latents,
         )
 
         self.decoder = CNNDecoder(

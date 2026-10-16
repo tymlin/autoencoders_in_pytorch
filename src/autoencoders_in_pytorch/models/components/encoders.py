@@ -140,11 +140,13 @@ class CNNVariationalEncoder(nn.Module):
         input_shape: tuple[int, int, int],
         hidden_channels: list[int],
         latent_channels: int,
+        downsample_latents: bool = True,
     ) -> None:
         super().__init__()
         self.input_shape = input_shape
         self.hidden_channels = hidden_channels
         self.latent_channels = latent_channels
+        self.downsample_latents = downsample_latents
 
         self.layers = nn.ModuleDict()
 
@@ -165,19 +167,19 @@ class CNNVariationalEncoder(nn.Module):
             )
             channels = out_channels
 
+        latent_stride = 2 if self.downsample_latents else 1
         self.mu = nn.Conv2d(
             in_channels=channels,
             out_channels=latent_channels,
             kernel_size=kernel_size,
-            stride=stride,
+            stride=latent_stride,
             padding=padding,
         )
-
         self.logvar = nn.Conv2d(
             in_channels=channels,
             out_channels=latent_channels,
             kernel_size=kernel_size,
-            stride=stride,
+            stride=latent_stride,
             padding=padding,
         )
 

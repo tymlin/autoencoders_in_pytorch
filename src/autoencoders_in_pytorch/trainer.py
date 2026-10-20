@@ -72,6 +72,7 @@ class Trainer:
             )
         )
         self.visu_batch = None
+        self.visu_noise: torch.Tensor | None = None
 
         self.num_char = 150
 
@@ -145,12 +146,16 @@ class Trainer:
                 metrics={},
             )
             latent_batches = []
+            mu_batches = []
             label_batches = []
             for batch_idx, batch in enumerate(dataloader):
                 out = self.module.validation_step(batch)
                 out_numpy = out.to_numpy()
                 latent_batches.append(out_numpy.latents)
                 label_batches.append(out_numpy.labels)
+
+                if out_numpy.mu is not None:
+                    mu_batches.append(out_numpy.mu)
 
                 metrics = self.module.compute_metrics(out)
                 self.add_metrics(
@@ -191,6 +196,28 @@ class Trainer:
             title=f"Epoch {epoch} - latent space",
             save_filepath=(self.results_plots_dirpath / "latents" / f"latents_epoch_{epoch:03d}.png"),
             projection_method=self.latent_projection_method,
+        )
+        if mu_batches:
+            plot_latents(
+                latents=np.concatenate(mu_batches)[self.visu_latent_indices],
+                labels=np.concatenate(label_batches)[self.visu_latent_indices],
+                class_names=self.datamodule.val_ds.classes_int2str,
+                title=f"Epoch {epoch} - latent space (mu)",
+                save_filepath=(self.results_plots_dirpath / "mu" / f"mu_epoch_{epoch:03d}.png"),
+                projection_method=self.latent_projection_method,
+            )
+
+        if self.visu_noise is None:
+            self.visu_noise = torch.randn(out.latents.shape)
+
+        generated_images = self.module.generate(self.visu_noise)
+        generated_images = generated_images.cpu().permute(0, 2, 3, 1).numpy()
+
+        plot_images(
+            images=generated_images,
+            sample_indices=list(range(len(generated_images))),
+            title=f"Epoch {epoch:03d} - generated images",
+            save_filepath=(self.results_plots_dirpath / "generated" / f"epoch_{epoch:03d}.png"),
         )
 
     def add_metrics(

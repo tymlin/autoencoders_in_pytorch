@@ -32,5 +32,7 @@ class VariationalAutoencoderModule(BaseModule):
             latents=model_output.latents,
             loss=loss,
             labels=labels,
+            mu=model_output.mu,
+            logvar=model_output.logvar,
         )
         return step_out

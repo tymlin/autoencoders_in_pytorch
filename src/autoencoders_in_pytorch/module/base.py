@@ -83,6 +83,15 @@ class BaseModule(ABC):
             out = self._common_step(batch, stage)
         return out
 
+    @torch.no_grad()
+    def generate(self, latents: torch.Tensor) -> torch.Tensor:
+        self.model.eval()
+        latents = latents.to(
+            device=self.device,
+            dtype=self.model.dtype,
+        )
+        return self.model.decode(latents).outputs  # (B, C, H, W)
+
     @abstractmethod
     def _common_step(self, batch: tuple, stage: ModelStage) -> ModuleStepOut:
         raise NotImplementedError()

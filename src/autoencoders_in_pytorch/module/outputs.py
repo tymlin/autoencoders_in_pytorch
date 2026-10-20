@@ -9,8 +9,10 @@ class ModuleStepItem:
     inputs: Tensor | np.ndarray  # Tensor: (C, H, W), NumPy: (H, W, C)
     targets: Tensor | np.ndarray  # Tensor: (C, H, W), NumPy: (H, W, C)
     outputs: Tensor | np.ndarray  # Tensor: (C, H, W), NumPy: (H, W, C)
-    latents: Tensor | np.ndarray  # (L,)
+    latents: Tensor | np.ndarray  # MLP: (L,), CNN: (C_z, H_z, W_z)
     label: int | None = None
+    mu: Tensor | np.ndarray | None = None  # MLP: (L,), CNN: (C_z, H_z, W_z)
+    logvar: Tensor | np.ndarray | None = None  # MLP: (L,), CNN: (C_z, H_z, W_z)
 
 
 @dataclass
@@ -18,9 +20,11 @@ class ModuleStepOut:
     inputs: Tensor | np.ndarray  # Tensor: (B, C, H, W), NumPy: (B, H, W, C)
     targets: Tensor | np.ndarray  # Tensor: (B, C, H, W), NumPy: (B, H, W, C)
     outputs: Tensor | np.ndarray  # Tensor: (B, C, H, W), NumPy: (B, H, W, C)
-    latents: Tensor | np.ndarray  # (B, L)
+    latents: Tensor | np.ndarray  # MLP: (B, L), CNN: (B, C_z, H_z, W_z)
     loss: Tensor | np.ndarray  # Scalar: ()
     labels: Tensor | np.ndarray | None = None  # (B,)
+    mu: Tensor | np.ndarray | None = None  # MLP: (B, L), CNN: (B, C_z, H_z, W_z)
+    logvar: Tensor | np.ndarray | None = None  # MLP: (B, L), CNN: (B, C_z, H_z, W_z)
 
     def __len__(self) -> int:
         return self.inputs.shape[0]
@@ -32,6 +36,8 @@ class ModuleStepOut:
             outputs=self.outputs[index],
             latents=self.latents[index],
             label=int(self.labels[index]) if self.labels is not None else None,
+            mu=self.mu[index] if self.mu is not None else None,
+            logvar=self.logvar[index] if self.logvar is not None else None,
         )
 
     def to_numpy(self) -> "ModuleStepOut":
@@ -48,4 +54,6 @@ class ModuleStepOut:
             latents=convert(self.latents),
             loss=convert(self.loss),
             labels=convert(self.labels) if self.labels is not None else None,
+            mu=convert(self.mu) if self.mu is not None else None,
+            logvar=convert(self.logvar) if self.logvar is not None else None,
         )

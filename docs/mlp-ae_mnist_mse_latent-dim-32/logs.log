@@ -1,0 +1,128 @@
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.utils.files:save_json:86 | Saving JSON file to path: 'runs/AE/MLP/mlp-ae_mnist_mse_latent-dim-32/config.json'
+INFO     | MainProcess:MainThread | __main__:<module>:37 | Training configuration:
+{
+    "run_dirpath": "runs/AE/MLP/mlp-ae_mnist_mse_latent-dim-32",
+    "run_name_suffix": "mlp-ae_mnist",
+    "seed": 42,
+    "data": {
+        "dataset": "mnist",
+        "train_split": "train",
+        "val_split": "test",
+        "test_split": null,
+        "image_size": [
+            32,
+            32
+        ],
+        "batch_size": 128,
+        "num_workers": 0,
+        "persistent_workers": false,
+        "pin_memory": true,
+        "drop_last": true,
+        "shuffle": true
+    },
+    "optimizer": {
+        "lr": 0.0005,
+        "weight_decay": 0.0
+    },
+    "trainer": {
+        "max_epochs": 200,
+        "device": "mps",
+        "device_id": 0,
+        "calculate_perceptual_metrics": "lpips",
+        "num_visu_samples": 36,
+        "num_visu_latents": null,
+        "latent_projection_method": "umap"
+    }
+}
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.utils.torch_utils:seed_everything:11 | Setting seed to 42
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.data.datasets:__init__:139 | Initialized `MNIST-train` dataset
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.data.datasets:__init__:139 | Initialized `MNIST-test` dataset
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.data.datamodule:_log_info:149 | Datasets summary:
+	     train: 60000 (MNIST-train)
+	validation: 10000 (MNIST-test)
+	      test: 0 (None)
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.data.datamodule:_log_info:156 | Dataloader batches summary:
+	     train: 468 batches
+	validation: 79 batches
+	      test: None
+WARNING  | MainProcess:MainThread | autoencoders_in_pytorch.module.base:__init__:53 | Perceptual metrics (LPIPS) are enabled. Computing them for every batch slows down training and validation.
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.utils.torch_utils:get_device_and_id:55 | Available devices: `cpu`, `mps`. Available CUDA device count: 0. Specified device: `mps` with id: `0`
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.utils.files:create_directory:29 | Created directory at path: 'runs/AE/MLP/mlp-ae_mnist_mse_latent-dim-32/checkpoints'
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.utils.files:create_directory:29 | Created directory at path: 'runs/AE/MLP/mlp-ae_mnist_mse_latent-dim-32/results_plots'
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.utils.files:create_directory:29 | Created directory at path: 'runs/AE/MLP/mlp-ae_mnist_mse_latent-dim-32/metrics_plots'
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.module.base:setup:66 | Moving model and loss to the device: `mps`
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.trainer:log_module_summary:230 | `AutoencoderModule` summary:
+	Model structure:
+		MLPAutoencoder(
+		  (encoder): MLPEncoder(
+		    (layers): ModuleDict(
+		      (flatten): Flatten(start_dim=1, end_dim=-1)
+		      (linear_0): Linear(in_features=1024, out_features=128, bias=True)
+		      (relu_0): ReLU()
+		      (linear_1): Linear(in_features=128, out_features=64, bias=True)
+		      (relu_1): ReLU()
+		      (latent): Linear(in_features=64, out_features=32, bias=True)
+		    )
+		  )
+		  (decoder): MLPDecoder(
+		    (layers): ModuleDict(
+		      (linear_0): Linear(in_features=32, out_features=64, bias=True)
+		      (relu_0): ReLU()
+		      (linear_1): Linear(in_features=64, out_features=128, bias=True)
+		      (relu_1): ReLU()
+		      (output): Linear(in_features=128, out_features=1024, bias=True)
+		      (sigmoid): Sigmoid()
+		      (unflatten): Unflatten(dim=1, unflattened_size=(1, 32, 32))
+		    )
+		  )
+		)
+	Model summary:
+		============================================================================================================================================
+		Layer (type:depth-idx)                   Input Shape               Output Shape              Param #                   Param %
+		============================================================================================================================================
+		MLPAutoencoder                           [128, 1, 32, 32]          [128, 1, 32, 32]          --                             --
+		├─MLPEncoder: 1-1                        [128, 1, 32, 32]          [128, 32]                 --                             --
+		│    └─ModuleDict: 2-1                   --                        --                        --                             --
+		│    │    └─Flatten: 3-1                 [128, 1, 32, 32]          [128, 1024]               --                             --
+		│    │    └─Linear: 3-2                  [128, 1024]               [128, 128]                131,200                    46.19%
+		│    │    └─ReLU: 3-3                    [128, 128]                [128, 128]                --                             --
+		│    │    └─Linear: 3-4                  [128, 128]                [128, 64]                 8,256                       2.91%
+		│    │    └─ReLU: 3-5                    [128, 64]                 [128, 64]                 --                             --
+		│    │    └─Linear: 3-6                  [128, 64]                 [128, 32]                 2,080                       0.73%
+		├─MLPDecoder: 1-2                        [128, 32]                 [128, 1, 32, 32]          --                             --
+		│    └─ModuleDict: 2-2                   --                        --                        --                             --
+		│    │    └─Linear: 3-7                  [128, 32]                 [128, 64]                 2,112                       0.74%
+		│    │    └─ReLU: 3-8                    [128, 64]                 [128, 64]                 --                             --
+		│    │    └─Linear: 3-9                  [128, 64]                 [128, 128]                8,320                       2.93%
+		│    │    └─ReLU: 3-10                   [128, 128]                [128, 128]                --                             --
+		│    │    └─Linear: 3-11                 [128, 128]                [128, 1024]               132,096                    46.50%
+		│    │    └─Sigmoid: 3-12                [128, 1024]               [128, 1024]               --                             --
+		│    │    └─Unflatten: 3-13              [128, 1024]               [128, 1, 32, 32]          --                             --
+		============================================================================================================================================
+		Total params: 284,064
+		Trainable params: 284,064
+		Non-trainable params: 0
+		Total mult-adds (Units.MEGABYTES): 36.36
+		============================================================================================================================================
+		Input size (MB): 0.52
+		Forward/backward pass size (MB): 1.47
+		Params size (MB): 1.14
+		Estimated Total Size (MB): 3.14
+		============================================================================================================================================
+	Optimizer:
+		Adam (
+		Parameter Group 0
+		    amsgrad: False
+		    betas: (0.9, 0.999)
+		    capturable: False
+		    decoupled_weight_decay: False
+		    differentiable: False
+		    eps: 1e-08
+		    foreach: None
+		    fused: None
+		    lr: 0.0005
+		    maximize: False
+		    weight_decay: 0.0
+		)
+	Loss function:
+		MSELoss()

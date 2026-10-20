@@ -1,0 +1,138 @@
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.utils.files:save_json:86 | Saving JSON file to path: 'runs/AE/CNN/cnn-ae_mnist_mse_latent-channels-8/config.json'
+INFO     | MainProcess:MainThread | __main__:<module>:37 | Training configuration:
+{
+    "run_dirpath": "runs/AE/CNN/cnn-ae_mnist_mse_latent-channels-8",
+    "run_name_suffix": "cnn-ae_mnist",
+    "seed": 42,
+    "data": {
+        "dataset": "mnist",
+        "train_split": "train",
+        "val_split": "test",
+        "test_split": null,
+        "image_size": [
+            32,
+            32
+        ],
+        "batch_size": 128,
+        "num_workers": 0,
+        "persistent_workers": false,
+        "pin_memory": true,
+        "drop_last": true,
+        "shuffle": true
+    },
+    "optimizer": {
+        "lr": 0.0005,
+        "weight_decay": 0.0
+    },
+    "trainer": {
+        "max_epochs": 200,
+        "device": "mps",
+        "device_id": 0,
+        "calculate_perceptual_metrics": "lpips",
+        "num_visu_samples": 36,
+        "num_visu_latents": null,
+        "latent_projection_method": "umap"
+    }
+}
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.utils.torch_utils:seed_everything:11 | Setting seed to 42
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.data.datasets:__init__:139 | Initialized `MNIST-train` dataset
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.data.datasets:__init__:139 | Initialized `MNIST-test` dataset
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.data.datamodule:_log_info:149 | Datasets summary:
+	     train: 60000 (MNIST-train)
+	validation: 10000 (MNIST-test)
+	      test: 0 (None)
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.data.datamodule:_log_info:156 | Dataloader batches summary:
+	     train: 468 batches
+	validation: 79 batches
+	      test: None
+WARNING  | MainProcess:MainThread | autoencoders_in_pytorch.module.base:__init__:53 | Perceptual metrics (LPIPS) are enabled. Computing them for every batch slows down training and validation.
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.utils.torch_utils:get_device_and_id:55 | Available devices: `cpu`, `mps`. Available CUDA device count: 0. Specified device: `mps` with id: `0`
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.utils.files:create_directory:29 | Created directory at path: 'runs/AE/CNN/cnn-ae_mnist_mse_latent-channels-8/checkpoints'
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.utils.files:create_directory:29 | Created directory at path: 'runs/AE/CNN/cnn-ae_mnist_mse_latent-channels-8/results_plots'
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.utils.files:create_directory:29 | Created directory at path: 'runs/AE/CNN/cnn-ae_mnist_mse_latent-channels-8/metrics_plots'
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.module.base:setup:66 | Moving model and loss to the device: `mps`
+INFO     | MainProcess:MainThread | autoencoders_in_pytorch.trainer:log_module_summary:230 | `AutoencoderModule` summary:
+	Model structure:
+		CNNAutoencoder(
+		  (encoder): CNNEncoder(
+		    (layers): ModuleDict(
+		      (conv_0): Conv2dNormActivation(
+		        (0): Conv2d(1, 8, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+		        (1): BatchNorm2d(8, eps=1e-05, momentum=0.1, affine=True, bias=True, track_running_stats=True)
+		        (2): ReLU(inplace=True)
+		      )
+		      (conv_1): Conv2dNormActivation(
+		        (0): Conv2d(8, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+		        (1): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, bias=True, track_running_stats=True)
+		        (2): ReLU(inplace=True)
+		      )
+		      (latent): Conv2d(16, 8, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+		    )
+		  )
+		  (decoder): CNNDecoder(
+		    (layers): ModuleDict(
+		      (conv_transpose_0): ConvTranspose2d(8, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), output_padding=(1, 1), bias=False)
+		      (batch_norm_0): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, bias=True, track_running_stats=True)
+		      (relu_0): ReLU()
+		      (conv_transpose_1): ConvTranspose2d(16, 8, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), output_padding=(1, 1), bias=False)
+		      (batch_norm_1): BatchNorm2d(8, eps=1e-05, momentum=0.1, affine=True, bias=True, track_running_stats=True)
+		      (relu_1): ReLU()
+		      (output): ConvTranspose2d(8, 1, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), output_padding=(1, 1))
+		      (sigmoid): Sigmoid()
+		    )
+		  )
+		)
+	Model summary:
+		=================================================================================================================================================
+		Layer (type:depth-idx)                        Input Shape               Output Shape              Param #                   Param %
+		=================================================================================================================================================
+		CNNAutoencoder                                [128, 1, 32, 32]          [128, 1, 32, 32]          --                             --
+		├─CNNEncoder: 1-1                             [128, 1, 32, 32]          [128, 8, 4, 4]            --                             --
+		│    └─ModuleDict: 2-1                        --                        --                        --                             --
+		│    │    └─Conv2dNormActivation: 3-1         [128, 1, 32, 32]          [128, 8, 16, 16]          --                             --
+		│    │    │    └─Conv2d: 4-1                  [128, 1, 32, 32]          [128, 8, 16, 16]          72                          1.48%
+		│    │    │    └─BatchNorm2d: 4-2             [128, 8, 16, 16]          [128, 8, 16, 16]          16                          0.33%
+		│    │    │    └─ReLU: 4-3                    [128, 8, 16, 16]          [128, 8, 16, 16]          --                             --
+		│    │    └─Conv2dNormActivation: 3-2         [128, 8, 16, 16]          [128, 16, 8, 8]           --                             --
+		│    │    │    └─Conv2d: 4-4                  [128, 8, 16, 16]          [128, 16, 8, 8]           1,152                      23.72%
+		│    │    │    └─BatchNorm2d: 4-5             [128, 16, 8, 8]           [128, 16, 8, 8]           32                          0.66%
+		│    │    │    └─ReLU: 4-6                    [128, 16, 8, 8]           [128, 16, 8, 8]           --                             --
+		│    │    └─Conv2d: 3-3                       [128, 16, 8, 8]           [128, 8, 4, 4]            1,160                      23.88%
+		├─CNNDecoder: 1-2                             [128, 8, 4, 4]            [128, 1, 32, 32]          --                             --
+		│    └─ModuleDict: 2-2                        --                        --                        --                             --
+		│    │    └─ConvTranspose2d: 3-4              [128, 8, 4, 4]            [128, 16, 8, 8]           1,152                      23.72%
+		│    │    └─BatchNorm2d: 3-5                  [128, 16, 8, 8]           [128, 16, 8, 8]           32                          0.66%
+		│    │    └─ReLU: 3-6                         [128, 16, 8, 8]           [128, 16, 8, 8]           --                             --
+		│    │    └─ConvTranspose2d: 3-7              [128, 16, 8, 8]           [128, 8, 16, 16]          1,152                      23.72%
+		│    │    └─BatchNorm2d: 3-8                  [128, 8, 16, 16]          [128, 8, 16, 16]          16                          0.33%
+		│    │    └─ReLU: 3-9                         [128, 8, 16, 16]          [128, 8, 16, 16]          --                             --
+		│    │    └─ConvTranspose2d: 3-10             [128, 8, 16, 16]          [128, 1, 32, 32]          73                          1.50%
+		│    │    └─Sigmoid: 3-11                     [128, 1, 32, 32]          [128, 1, 32, 32]          --                             --
+		=================================================================================================================================================
+		Total params: 4,857
+		Trainable params: 4,857
+		Non-trainable params: 0
+		Total mult-adds (Units.MEGABYTES): 70.94
+		=================================================================================================================================================
+		Input size (MB): 0.52
+		Forward/backward pass size (MB): 13.76
+		Params size (MB): 0.02
+		Estimated Total Size (MB): 14.31
+		=================================================================================================================================================
+	Optimizer:
+		Adam (
+		Parameter Group 0
+		    amsgrad: False
+		    betas: (0.9, 0.999)
+		    capturable: False
+		    decoupled_weight_decay: False
+		    differentiable: False
+		    eps: 1e-08
+		    foreach: None
+		    fused: None
+		    lr: 0.0005
+		    maximize: False
+		    weight_decay: 0.0
+		)
+	Loss function:
+		MSELoss()

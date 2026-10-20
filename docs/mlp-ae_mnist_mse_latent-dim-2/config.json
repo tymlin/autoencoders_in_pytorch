@@ -1,0 +1,34 @@
+{
+    "run_dirpath": "runs/AE/MLP/mlp-ae_mnist_mse_latent-dim-2",
+    "run_name_suffix": "mlp-ae_mnist",
+    "seed": 42,
+    "data": {
+        "dataset": "mnist",
+        "train_split": "train",
+        "val_split": "test",
+        "test_split": null,
+        "image_size": [
+            32,
+            32
+        ],
+        "batch_size": 128,
+        "num_workers": 0,
+        "persistent_workers": false,
+        "pin_memory": true,
+        "drop_last": true,
+        "shuffle": true
+    },
+    "optimizer": {
+        "lr": 0.0005,
+        "weight_decay": 0.0
+    },
+    "trainer": {
+        "max_epochs": 200,
+        "device": "mps",
+        "device_id": 0,
+        "calculate_perceptual_metrics": "lpips",
+        "num_visu_samples": 36,
+        "num_visu_latents": null,
+        "latent_projection_method": "umap"
+    }
+}

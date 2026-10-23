@@ -16,7 +16,6 @@ if __name__ == "__main__":
         shuffle=True,
     )
 
-    datamodule.setup_dataloaders()
     train_dataloader = datamodule.get_train_dataloader()
 
     loader_iter = iter(train_dataloader)

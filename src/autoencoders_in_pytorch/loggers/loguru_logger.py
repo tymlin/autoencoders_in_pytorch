@@ -71,6 +71,7 @@ def configure_logger(
             colorize=True,
             level=level,
             format=format_,
+            filter=lambda record: not record["extra"].get("file_only", False),
         )
 
     if log_filepath is not None:

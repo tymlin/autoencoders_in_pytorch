@@ -134,8 +134,8 @@ class Trainer:
                     advance=1,
                     metrics=progress_metrics,
                 )
-            final_progress_bar_text = f"Final progress: {progress_to_str(progress)}"
-        logger.info(final_progress_bar_text)
+            final_progress_bar_text = f"{progress_to_str(progress)}"
+        logger.bind(file_only=True).info(final_progress_bar_text)
 
     def validation_epoch(self, dataloader: torch.utils.data.DataLoader):
         num_batches = len(dataloader)
@@ -172,8 +172,8 @@ class Trainer:
                     advance=1,
                     metrics=progress_metrics,
                 )
-            final_progress_bar_text = f"Final progress: {progress_to_str(progress)}"
-        logger.info(final_progress_bar_text)
+            final_progress_bar_text = f"{progress_to_str(progress)}"
+        logger.bind(file_only=True).info(final_progress_bar_text)
 
         out = self.module.validation_step(self.visu_batch).to_numpy()
         epoch = self.current_epoch + 1
